@@ -1,7 +1,6 @@
 import math
 import operator
 import random
-#import main
 
 # Seed used to control the tests
 random.seed()
