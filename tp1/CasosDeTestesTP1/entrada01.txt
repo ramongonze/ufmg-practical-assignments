@@ -1,0 +1,15 @@
+4
+100;Clara;200;300
+200;Matheus;100;400
+300;Manu;100
+400;Lucas;200
+1;2;300;400
+2;1;100;5000;Assistindo O exorcista!!
+3;5;300
+4;1;100;5001;Adoro filme de terror
+5;1;200;5002;Jogão do Atlético e Cruzeiro esse domingo
+6;1;300;5003;Terminando o trabalho de AEDS2!!
+7;1;300;5004;Viva compilou!!
+8;4;100;5002
+9;1;300;5005;To de folga agora!!
+10;5;400
