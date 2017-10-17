@@ -46,7 +46,7 @@ functions_set = ['+', '-', '*', '/', 'log']
 functions_for_two_terminals = ['+', '-', '*', '/']
 function_for_one_terminal = ['log'] # For example, sin, cos, log
 variables_set = []
-terminals_set = ['num'] #'num' is a real number between -1 and 1
+terminals_set = ['num'] #'num' is a real number between MIN and MAX
 t_and_f_set = None #Both sets, used in grow method
 
 ############################################## RANDOM ELEMENTS ##################################################
