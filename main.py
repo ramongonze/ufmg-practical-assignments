@@ -1,4 +1,5 @@
 import constants as c
+import aco
 import sys
 
 def main():
@@ -11,5 +12,7 @@ def main():
 	for line in f:
 		line = line.split()
 		points = points + [c.Point(int(line[0]), int(line[1]), int(line[2]), int(line[3]))]
+
+	graph = aco.buildGraph(points)
 
 main()
