@@ -2,9 +2,8 @@ class Ant(object):
 	def __init__(self, point=None):
 		self.point = point
 
-
 class Edge(object):
-	def __init__(self, weight, pheromone):
+	def __init__(self, weight=None, pheromone=None):
 		self.weight = weight
 		self.pheromone = pheromone
 
@@ -14,11 +13,10 @@ class Point(object):
 		self.y = y
 		self.c = c
 		self.d = d
-		self.ant = ant
 
 #Parameters
 N = None # Number of Points
 P = None # Number of p-median
-ITERATIONS = 100 # Number of iterations, used as "generations"
-INITIAL_PHEROMONE = 100 # Initial pheromone
-NUMBER_OF_ANTS = None # The number of ants is equals to the number of nodes in the graph
+ITERATIONS = 10 # Number of iterations, used as "generations"
+INITIAL_PHEROMONE = 10 # Initial pheromone
+NUMBER_OF_ANTS = None # The number of ants is equals to the number of nodes - number of p-median.
