@@ -24,7 +24,7 @@ def buildGraph(points, im_point):
 
 	return graph
 
-# According to pheronomes among the imaginary point and the other points, choose 'c.P' medians.
+# According to pheronomes among the imaginary point and the other points, choose 'c.P' medians and spread the ants into them.
 def spreadAnts(ants, graph, points):
 
 	number_of_choosed_points, choosed_points = 0, []
@@ -48,7 +48,6 @@ def spreadAnts(ants, graph, points):
 			p = (random.sample(pot2, 1))[0]
 		ants[i] = (points[p].x, points[p].y)
 	
-
 # Returns a point in the middle of the space.
 def imaginaryPoint(max_and_min):
 	return (int((max_and_min['max_x']+max_and_min['min_x'])/2), int((max_and_min['max_y']+max_and_min['min_y'])/2))
@@ -63,19 +62,26 @@ def aco(im_point, graph, points):
 		for i in range(0, c.NUMBER_OF_ANTS):
 
 
-"""
+def buildSolution(ant):
 
+
+
+"""
 ACO (maxIt, N, τ0 )
 	*Inicializa τij (igualmente para cada aresta)
 	*Distribui cada uma das k formigas em um nó selecionado aleatoriamente
 	*t = 1
 	*while (t < maxIt) do //número de iterações
 		*for i = 0 to N do //para cada formiga
-			1. Constrói uma solução aplicando uma regra de transição
-			probabilística (e-1) vezes // e é o número de arestas do grafo
-			2. Avalia o custo de cada solução construída
-			3. Atualiza melhor solução
+			Pego a mediana que a formiga i está.
+			Aplico a regra de transição (feromonio * 1/peso) em todos os vértices e jogo num pote.
+			Pego um ponto p aleatório do pote.
+			Enquanto (demanda(p) não superar a capacidade da mediana)
+				Pego um ponto p aleatório do pote.
+			Movo a formiga para este ponto
 		*end for
+		2. Avalia o custo de cada solução construída
+		3. Atualiza melhor solução
 		Atualiza as trilhas de feromônio
 		*t = t + 1
 	*end while
