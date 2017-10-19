@@ -31,6 +31,7 @@ def main():
 	im_point = aco.imaginaryPoint(max_and_min)
 	graph = aco.buildGraph(points, im_point)
 
+""" Print the graph
 	for i in range(0, c.N):
 		for j in range(0, i+1):
 			print('X ', end='')
@@ -38,7 +39,7 @@ def main():
 			print('{0:.0f} '.format(graph[i][j].weight), end='')
 		print('{0:.0f} '.format(graph[i][-1].pheromone))
 	print('')
-
+"""
 	
 	aco.aco(im_point, graph, points)
 

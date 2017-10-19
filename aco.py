@@ -1,6 +1,8 @@
 import constants as c
 import random
 
+random.seed()
+
 def euclidianDistance(x0, x1, y0, y1):
 	return ((x0 - x1)**2 + (y0 - y1)**2)**(1/2)
 
@@ -36,7 +38,7 @@ def spreadAnts(ants, graph, points):
 		if number_of_choosed_points < c.P:
 			if p not in choosed_points:
 				choosed_points.append(p)
-			number_of_choosed_points += 1
+				number_of_choosed_points += 1
 			if number_of_choosed_points == c.P:
 				pot2 = []
 				print(choosed_points)
@@ -54,16 +56,11 @@ def imaginaryPoint(max_and_min):
 def aco(im_point, graph, points):
 	# List with the ants starting in the imaginary point in the space.
 	ants = [im_point] * c.NUMBER_OF_ANTS
-	print('NUMBER_OF_ANTS: ' + str(c.NUMBER_OF_ANTS))
-	print('im_point: ' + str(im_point))
-	print('ANTS:')
-	print(ants)
-	#for t in range(1, c.ITERATIONS + 1):
-	ants_copy = ants[:]
-	spreadAnts(ants_copy, graph, points)
-	print('AFTER:')
-	print(ants_copy)
-		#for i in range(0, c.NUMBER_OF_ANTS):
+
+	for t in range(1, c.ITERATIONS + 1):
+		ants_copy = ants[:]
+		spreadAnts(ants_copy, graph, points)
+		for i in range(0, c.NUMBER_OF_ANTS):
 
 
 """
