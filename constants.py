@@ -8,11 +8,17 @@ class Edge(object):
 		self.pheromone = pheromone
 
 class Point(object):
-	def __init__(self, x=None, y=None, c=None, d=None, ant=None):
+	remaining = 0
+
+	def __init__(self, x=None, y=None, c=None, d=None, ant=False):
 		self.x = x
 		self.y = y
 		self.c = c
 		self.d = d
+		self.ant = ant
+
+
+
 
 #Parameters
 N = None # Number of Points

@@ -26,7 +26,6 @@ def buildGraph(points, im_point):
 
 # According to pheronomes among the imaginary point and the other points, choose 'c.P' medians and spread the ants into them.
 def spreadAnts(ants, graph, points):
-
 	number_of_choosed_points, choosed_points = 0, []
 	# Calculates the probability to choose each point.
 	pot = []
@@ -46,7 +45,8 @@ def spreadAnts(ants, graph, points):
 					pot2 += [choosed_points[j]] * graph[choosed_points[j]][-1].pheromone
 		else:
 			p = (random.sample(pot2, 1))[0]
-		ants[i] = (points[p].x, points[p].y)
+		ants[i] = p
+		points[p] = True
 	
 # Returns a point in the middle of the space.
 def imaginaryPoint(max_and_min):
@@ -54,15 +54,23 @@ def imaginaryPoint(max_and_min):
 
 def aco(im_point, graph, points):
 	# List with the ants starting in the imaginary point in the space.
-	ants = [im_point] * c.NUMBER_OF_ANTS
+	ants = [c.N] * c.NUMBER_OF_ANTS # c.N is the index of the imaginary point
 
 	for t in range(1, c.ITERATIONS + 1):
 		ants_copy = ants[:]
 		spreadAnts(ants_copy, graph, points)
 		for i in range(0, c.NUMBER_OF_ANTS):
 
+# Ant is a tuple with the coordinates x and y of the median point.
+def buildSolution(ant_median, points):
+	pot = []
+	for i in range(0, c.N):
+		if ant_median < points:
+			pot += [i] * graph[ant_median][i].pheromone * int(100/graph[ant_median][i].weight)
+		elif ant_median > points:
+			pot += [i] * graph[i][ant_median].pheromone * int(100/graph[i][ant_median].weight)
 
-def buildSolution(ant):
+
 
 
 
