@@ -8,21 +8,22 @@ class Edge(object):
 		self.pheromone = pheromone
 
 class Point(object):
-	remaining = 0
+	remaining_points = None
 
-	def __init__(self, x=None, y=None, c=None, d=None, ant=False):
+	def __init__(self, x, y, c, d, cur_c=0, ants=0, attended_by=None, random_prob=None):
 		self.x = x
 		self.y = y
 		self.c = c
 		self.d = d
-		self.ant = ant
-
-
-
+		self.cur_c = cur_c # Total sum of the points attended, if this point is a median.
+		self.ants = ants # Number of ants in this point.
+		self.attended_by = attended_by # Median which attend the point in analysis. A median attends itself.
+		self.random_prob = random_prob # Used to select points randomly.
 
 #Parameters
 N = None # Number of Points
 P = None # Number of p-median
-ITERATIONS = 10 # Number of iterations, used as "generations"
+ITERATIONS = 1 # Number of iterations, used as "generations"
 INITIAL_PHEROMONE = 10 # Initial pheromone
 NUMBER_OF_ANTS = None # The number of ants is equals to the number of nodes - number of p-median.
+IM_POINT = -1 # Index of the imaginary point in the graph
