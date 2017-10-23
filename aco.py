@@ -23,13 +23,22 @@ def buildGraph(points):
 
 	return graph
 
+# Let a point x: sumKNN calculates the sum of the distances of the K nearest points of x.
+def sumKNN(graph, points):
+	
+	for i in range(0, c.N):
+		neighbors = []
+		for j in range(0, c.N):
+			neighbors.append(graph[i][j].weight)
+		neighbors.sort()
+		points[i].s = sum(neighbors[1:(c.K+1)]) # It starts in '1' because the first element is the point itself (distance = 0).
+
 # Returns the index of a point in the array "points". Used to choose randomly a point.
 def binarySearch(item, points):
-	begin, end = 0, c.N-1
+	begin, end = 0, len(points)
 
 	while (end - begin) > 1:
-		mid = (begin+end)/2
-
+		mid = int((begin+end)/2)
 		if item > points[mid].random_prob:
 			begin = mid
 		elif item < points[mid].random_prob:
@@ -44,79 +53,93 @@ def binarySearch(item, points):
 
 # According to pheronomes among the imaginary point and the other points, choose 'c.P' medians and spread the ants into them.
 def spreadAnts(ants, graph, points):
-	number_of_choosed_points, choosed_points = 0, []
-	# Calculates the probability to choose each point.
-	points[0].random_prob = graph[0][c.IM_POINT].pheromone
-	for i in range(1, c.N):
-		points[i].random_prob = points[i-1].random_prob + graph[i][c.IM_POINT].pheromone
-	total_pheromone = points[-1].random_prob
+	number_of_choosed_points, choosed_points, choosed_points_i = 0, [], []
 
-	for i in range(0, c.NUMBER_OF_ANTS):
-		p = binarySearch(random.randint(1, total_pheromone), points)
-		if number_of_choosed_points < c.P:
-			if p not in choosed_points:
-				choosed_points.append(p)
-				number_of_choosed_points += 1
-			if number_of_choosed_points == c.P:
-				points[choosed_points[0]].random_prob = graph[points[choosed_points[0]]][c.IM_POINT]
-				for j in range(1, c.P):
-					points[choosed_points[j]].random_prob = points[choosed_points[j-1]].random_prob + graph[points[choosed_points[j]]][c.IM_POINT].pheromone
-					total_pheromone = points[choosed_points[-1]].random_prob
-		else:
-			# STOPPED HERE. choosed_points now doesn't have a pheromone.
-			###
-			###
-			###
+	points_aux = points[:] # Objects
+	points_aux_i = list(range(0, c.N)) # Indexes
+
+	# Choose 'c.P' medians
+	while number_of_choosed_points < c.P:
+		points_aux[0].random_prob = graph[0][c.IM_POINT].pheromone
+		for i in range(1, len(points_aux)):
+			points_aux[i].random_prob = points_aux[i-1].random_prob + graph[i][c.IM_POINT].pheromone
+		total_pheromone = points_aux[-1].random_prob
+		# Choose a point
+		p = binarySearch(random.randint(1, total_pheromone), points_aux)
+		choosed_points_i += [points_aux_i[p]] 
+		choosed_points += [points_aux[p]]
+		number_of_choosed_points += 1
+		del points_aux[p], points_aux_i[p]
+
+
+	# Distribute all ants in the medians choosed, based in the sum of KNN.
+	total_sum = 0
+	for p in choosed_points:
+		total_sum += p.s
+	
+	total_ants = 0
+	for p in choosed_points:
+		p.ants = int((c.NUMBER_OF_ANTS * p.s)/ total_sum)
+		total_ants += p.ants
+
+	# Check if all the ants were selected and moved to one median
+	if total_ants < c.NUMBER_OF_ANTS:
+		while total_ants < c.NUMBER_OF_ANTS:
+			choosed_points[0].random_prob = graph[0][c.IM_POINT].pheromone
+			for i in range(1, c.P):
+				choosed_points[i].random_prob = choosed_points[i-1].random_prob + graph[i][c.IM_POINT].pheromone
+			total_pheromone = choosed_points[-1].random_prob
 			p = binarySearch(random.randint(1, total_pheromone), choosed_points)
-		ants[i] = p
-		points[p].ants += 1
-		points[p].attended_by = p
-	return choosed_points
+			choosed_points[p].ants += 1
+			total_ants += 1
 
-def aco(im_point, graph, points):
+	return choosed_points_i
+
+def aco(graph, points):
 	# List with the ants starting in the imaginary point in the space.
 	ants = [c.N] * c.NUMBER_OF_ANTS # c.N is the index of the imaginary point.
 
 	for t in range(1, c.ITERATIONS + 1):
 		ants_copy = ants[:]
+		c.Point.remaining_points = c.N - c.P
 		p_medians = spreadAnts(ants_copy, graph, points) # ants_copy contains indexes of p-medians
 		c.Point.remaining_points = c.N - c.P
-		for i in range(0, c.NUMBER_OF_ANTS):
-			buildSolution(ants_copy[i], graph, points)
+		# for i in range(0, c.NUMBER_OF_ANTS):
+		# 	buildSolution(ants_copy[i], graph, points)
 
-		if c.Point.remaining_points > 0: # There is at least one point whitout any ant.
-			empty_points, medians = [], []
-			for i in range(0, c.N):
-				if points[i].ants == 0 and points[i].attended_by != i:
-					empty_points += [i]
+		# if c.Point.remaining_points > 0: # There is at least one point whitout any ant.
+		# 	empty_points, medians = [], []
+		# 	for i in range(0, c.N):
+		# 		if points[i].ants == 0 and points[i].attended_by != i:
+		# 			empty_points += [i]
 
-			# Fill empty points. stuffed_points != {}
-			for p in empty_points:
-				# Choose the closest median
-				if p_medians[0] < p:
-					min_w = graph[p_medians[0]][p].weight
-				else:
-					min_w = graph[p][p_medians[0]].weight
-				median_i = 0 # Closest median
-				i = 0
-				while points[p_medians[i]].cur_c + points[p].d > points[p_medians[i]].c:
-					i += 1
-					if p_medians[i] < p:
-						min_w = graph[p_medians[i]][p].weight
-					else:
-						min_w = graph[p][p_medians[i]].weight
-					median_i = i # Closest median
+		# 	# Fill empty points. stuffed_points != {}
+		# 	for p in empty_points:
+		# 		# Choose the closest median
+		# 		if p_medians[0] < p:
+		# 			min_w = graph[p_medians[0]][p].weight
+		# 		else:
+		# 			min_w = graph[p][p_medians[0]].weight
+		# 		median_i = 0 # Closest median
+		# 		i = 0
+		# 		while points[p_medians[i]].cur_c + points[p].d > points[p_medians[i]].c:
+		# 			i += 1
+		# 			if p_medians[i] < p:
+		# 				min_w = graph[p_medians[i]][p].weight
+		# 			else:
+		# 				min_w = graph[p][p_medians[i]].weight
+		# 			median_i = i # Closest median
 
-				for i in range(1, c.P):
-					if p_medians[i] < median_i:
-						if min_w > graph[p_medians[i]][median_i].weight:
-							min_w = graph[p_medians[i]][median_i].weight
-							median_i = i
-					elif min_w > graph[median_i][p_medians[i]].weight:
-						min_w = graph[median_i][p_medians[i]].weight
-						median_i = i
-				points[p].attended_by = median_i
-				points[median_i].ants += 1
+		# 		for i in range(1, c.P):
+		# 			if p_medians[i] < median_i:
+		# 				if min_w > graph[p_medians[i]][median_i].weight:
+		# 					min_w = graph[p_medians[i]][median_i].weight
+		# 					median_i = i
+		# 			elif min_w > graph[median_i][p_medians[i]].weight:
+		# 				min_w = graph[median_i][p_medians[i]].weight
+		# 				median_i = i
+		# 		points[p].attended_by = median_i
+		# 		points[median_i].ants += 1
 
 
 def buildSolution(ant_median, graph, points):
@@ -141,9 +164,6 @@ def buildSolution(ant_median, graph, points):
 		av_points[i].attended_by = ant_median
 		points[ant_median].cur_c += av_points[p].d
 		c.Point.remaining_points -= 1
-
-
-
 
 """
 ACO (maxIt, N, τ0 )
