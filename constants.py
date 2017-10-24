@@ -24,8 +24,8 @@ class Point(object):
 #Parameters
 N = None # Number of Points
 P = None # Number of p-median
-ITERATIONS = 30 # Number of iterations, used as "generations"
+ITERATIONS = 1 # Number of iterations, used as "generations"
 INITIAL_PHEROMONE = 10 # Initial pheromone
 NUMBER_OF_ANTS = None # The number of ants is equals to the number of nodes - number of p-median.
 IM_POINT = -1 # Index of the imaginary point in the graph
-K = 1 # It's the KNN (K-Nearest-neighbor) of a point.
+K = 100 # It's the KNN (K-Nearest-neighbor) of a point.

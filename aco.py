@@ -71,17 +71,16 @@ def spreadAnts(ants, graph, points):
 		number_of_choosed_points += 1
 		del points_aux[p], points_aux_i[p]
 
-
-	# Distribute all ants in the medians choosed, based in the sum of KNN.
-	total_sum = 0
+	# Distribute all ants in the medians choosed, based in the sum of KNN, inversely proportional.
+	factor = 0
 	for p in choosed_points:
-		total_sum += p.s
-	
-	total_ants, aux = 0, 0
+		factor += 1/p.s
+	factor = c.NUMBER_OF_ANTS/factor
+
+	total_ants = 0
 	for i in range(0, c.P):
-		choosed_points[i].ants = int((c.NUMBER_OF_ANTS * choosed_points[i].s)/ total_sum)
-		ants[aux:choosed_points[i].ants] = choosed_points_i[i]
-		aux += choosed_points[i].ants
+		choosed_points[i].ants += int((1/choosed_points[i].s) * factor)
+		ants[total_ants:total_ants+choosed_points[i].ants] = [choosed_points_i[i]] * choosed_points[i].ants
 		total_ants += choosed_points[i].ants
 
 	# Check if all the ants were selected and moved to one median
@@ -93,8 +92,7 @@ def spreadAnts(ants, graph, points):
 			total_pheromone = choosed_points[-1].random_prob
 			p = binarySearch(random.randint(1, total_pheromone), choosed_points)
 			choosed_points[p].ants += 1
-			ants[aux] = choosed_points_i[p]
-			aux += 1
+			ants[total_ants] = choosed_points_i[p]
 			total_ants += 1
 
 	return choosed_points_i
@@ -108,6 +106,10 @@ def aco(graph, points):
 		c.Point.remaining_points = c.N - c.P
 		p_medians = spreadAnts(ants_copy, graph, points) # ants_copy contains indexes of p-medians
 		c.Point.remaining_points = c.N - c.P
+		print('p_medians')
+		print(p_medians)
+		print('ants:')
+		print(ants_copy)
 		# for i in range(0, c.NUMBER_OF_ANTS):
 		# 	buildSolution(ants_copy[i], graph, points)
 
