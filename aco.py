@@ -77,10 +77,12 @@ def spreadAnts(ants, graph, points):
 	for p in choosed_points:
 		total_sum += p.s
 	
-	total_ants = 0
-	for p in choosed_points:
-		p.ants = int((c.NUMBER_OF_ANTS * p.s)/ total_sum)
-		total_ants += p.ants
+	total_ants, aux = 0, 0
+	for i in range(0, c.P):
+		choosed_points[i].ants = int((c.NUMBER_OF_ANTS * choosed_points[i].s)/ total_sum)
+		ants[aux:choosed_points[i].ants] = choosed_points_i[i]
+		aux += choosed_points[i].ants
+		total_ants += choosed_points[i].ants
 
 	# Check if all the ants were selected and moved to one median
 	if total_ants < c.NUMBER_OF_ANTS:
@@ -91,6 +93,8 @@ def spreadAnts(ants, graph, points):
 			total_pheromone = choosed_points[-1].random_prob
 			p = binarySearch(random.randint(1, total_pheromone), choosed_points)
 			choosed_points[p].ants += 1
+			ants[aux] = choosed_points_i[p]
+			aux += 1
 			total_ants += 1
 
 	return choosed_points_i
