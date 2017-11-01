@@ -1,5 +1,6 @@
 import constants as c
 import random
+import operation as op
 
 random.seed()
 
@@ -29,7 +30,7 @@ def sumKNN(graph, points):
 	for i in range(0, c.N):
 		neighbors = []
 		for j in range(0, c.N):
-			neighbors.append(graph[i][j].weight)
+			neighbors.append(graph[i][j].distance)
 		neighbors.sort()
 		points[i].s = sum(neighbors[1:(c.K+1)]) # It starts in '1' because the first element is the point itself (distance = 0).
 
@@ -58,7 +59,7 @@ def spreadAnts(ants, graph, points):
 	points_aux = points[:] # Objects
 	points_aux_i = list(range(0, c.N)) # Indexes
 
-	# Choose 'c.P' medians
+	# Choose p medians and store in choosed_points (objects), choosed_points_i (indexes) 
 	while number_of_choosed_points < c.P:
 		points_aux[0].random_prob = graph[0][c.IM_POINT].pheromone
 		for i in range(1, len(points_aux)):
@@ -76,6 +77,7 @@ def spreadAnts(ants, graph, points):
 	for p in choosed_points:
 		factor += 1/p.s
 	factor = c.NUMBER_OF_ANTS/factor
+
 
 	total_ants = 0
 	for i in range(0, c.P):
@@ -95,7 +97,7 @@ def spreadAnts(ants, graph, points):
 			ants[total_ants] = choosed_points_i[p]
 			total_ants += 1
 
-	return choosed_points_i
+	return choosed_points_i # Index list of the p-medians choosed.
 
 def aco(graph, points):
 	# List with the ants starting in the imaginary point in the space.
@@ -103,15 +105,13 @@ def aco(graph, points):
 
 	for t in range(1, c.ITERATIONS + 1):
 		ants_copy = ants[:]
+		p_medians = spreadAnts(ants_copy, graph, points) # ants_copy contains indexes of the p-medians choosed
 		c.Point.remaining_points = c.N - c.P
-		p_medians = spreadAnts(ants_copy, graph, points) # ants_copy contains indexes of p-medians
-		c.Point.remaining_points = c.N - c.P
-		print('p_medians')
-		print(p_medians)
-		print('ants:')
-		print(ants_copy)
+		
+		buildSolution(p_medians, points, graph)
+
 		# for i in range(0, c.NUMBER_OF_ANTS):
-		# 	buildSolution(ants_copy[i], graph, points)
+		# 	buildSolution(ants_copy[i], graph, points) # Each ant in ants_copy receive its p-median: i.e. [2,2,2,4,4,5]
 
 		# if c.Point.remaining_points > 0: # There is at least one point whitout any ant.
 		# 	empty_points, medians = [], []
@@ -123,71 +123,58 @@ def aco(graph, points):
 		# 	for p in empty_points:
 		# 		# Choose the closest median
 		# 		if p_medians[0] < p:
-		# 			min_w = graph[p_medians[0]][p].weight
+		# 			min_w = graph[p_medians[0]][p].distance
 		# 		else:
-		# 			min_w = graph[p][p_medians[0]].weight
+		# 			min_w = graph[p][p_medians[0]].distance
 		# 		median_i = 0 # Closest median
 		# 		i = 0
 		# 		while points[p_medians[i]].cur_c + points[p].d > points[p_medians[i]].c:
 		# 			i += 1
 		# 			if p_medians[i] < p:
-		# 				min_w = graph[p_medians[i]][p].weight
+		# 				min_w = graph[p_medians[i]][p].distance
 		# 			else:
-		# 				min_w = graph[p][p_medians[i]].weight
+		# 				min_w = graph[p][p_medians[i]].distance
 		# 			median_i = i # Closest median
 
 		# 		for i in range(1, c.P):
 		# 			if p_medians[i] < median_i:
-		# 				if min_w > graph[p_medians[i]][median_i].weight:
-		# 					min_w = graph[p_medians[i]][median_i].weight
+		# 				if min_w > graph[p_medians[i]][median_i].distance:
+		# 					min_w = graph[p_medians[i]][median_i].distance
 		# 					median_i = i
-		# 			elif min_w > graph[median_i][p_medians[i]].weight:
-		# 				min_w = graph[median_i][p_medians[i]].weight
+		# 			elif min_w > graph[median_i][p_medians[i]].distance:
+		# 				min_w = graph[median_i][p_medians[i]].distance
 		# 				median_i = i
 		# 		points[p].attended_by = median_i
 		# 		points[median_i].ants += 1
 
 
-def buildSolution(ant_median, graph, points):
-	av_points = [] # Available points. A list of indexes.
+def sortRemPoints(p_medians, points, graph):
+	sorted_points = [] # All the points aren't medians
 	for i in range(0, c.N):
-		if points[ant_median].cur_c + points[i].d <= points[ant_median].c: # The points which would overflow the capacity of the median aren't selected
-			if points[i].attended_by == None: # If it's a free point.
-				av_points += i
-			elif i != ant_median and points[i].attended_by == ant_median: # If the point is occuped by another ant from the same median.
-				av_points += i
+		if points[i].attended_by != i: # Ignore the medians
+			aux_list = [] # aux_list will contain all the distances among the point 'i' and the p_medians
+			for j in p_medians:
+				aux_list += [graph[i][j].distance]
+				points[i].medians_distances += [points[j]]
+			points[i].nearest_median = min(aux_list)
+			sorted_points += [points[i]]
 
-	if len(av_points) > 1:
-		# Transiction rule: It's inversely proportional to the weight and directly proportional to the pheromone.
-		points[av_points[0]].random_prob = graph[ant_median][av_points[0]].pheromone * int(100/graph[ant_median][av_points[0]].weight)
-		for i in range(1, len(av_points)):
-			points[av_points[i]].random_prob = graph[ant_median][av_points[i]].pheromone * int(100/graph[ant_median][av_points[i]].weight)
-		total_pheromone = points[av_points[-1]].random_prob
-		
-		# Choose a point randomly
-		p = binarySearch(random.randint(1, total_pheromone), av_points)
-		av_points[p].ants += 1
-		av_points[i].attended_by = ant_median
-		points[ant_median].cur_c += av_points[p].d
-		c.Point.remaining_points -= 1
+	sorted_points.sort(key=op.attrgetter('nearest_median')) # Order the points according the nearest median
 
-"""
-ACO (maxIt, N, τ0 )
-	*Inicializa τij (igualmente para cada aresta)
-	*Distribui cada uma das k formigas em um nó selecionado aleatoriamente
-	*t = 1
-	*while (t < maxIt) do //número de iterações
-		*for i = 0 to N do //para cada formiga
-			Pego a mediana que a formiga i está.
-			Aplico a regra de transição (feromonio * 1/peso) em todos os vértices e jogo num pote.
-			Pego um ponto p aleatório do pote.
-			Enquanto (demanda(p) não superar a capacidade da mediana)
-				Pego um ponto p aleatório do pote.
-			Movo a formiga para este ponto
-		*end for
-		2. Avalia o custo de cada solução construída
-		3. Atualiza melhor solução
-		Atualiza as trilhas de feromônio
-		*t = t + 1
-	*end while
-"""
+	return sorted_points
+
+def sortMedians(p, p_medians):
+	sorted_medians = []	
+
+
+	
+
+def buildSolution(p_medians, points, graph):
+	ordered_rem_points = sortRemPoints(p_medians, points, graph) # Ordered remaining points, according to the nearest median
+
+	for p in ordered_rem_points:
+		ordered_medians = p.medians
+
+
+
+	

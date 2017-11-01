@@ -3,14 +3,14 @@ class Ant(object):
 		self.point = point
 
 class Edge(object):
-	def __init__(self, weight=None, pheromone=None):
-		self.weight = weight
+	def __init__(self, distance=None, pheromone=None):
+		self.distance = distance
 		self.pheromone = pheromone
 
 class Point(object):
 	remaining_points = None
 
-	def __init__(self, x, y, c, d, cur_c=0, ants=0, attended_by=None, random_prob=None, s=None):
+	def __init__(self, x, y, c, d, cur_c=0, ants=0, attended_by=None, random_prob=None, s=None, nearest_median=None, medians_distances=[]):
 		self.x = x
 		self.y = y
 		self.c = c
@@ -20,6 +20,8 @@ class Point(object):
 		self.attended_by = attended_by # Median which attend the point in analysis. A median attends itself.
 		self.random_prob = random_prob # Used to select points randomly.
 		self.s = s # It's the sum of the distance among the K nearest neighbor of a point.
+		self.nearest_median = nearest_median
+		self.medians_distances = medians_distances
 
 #Parameters
 N = None # Number of Points

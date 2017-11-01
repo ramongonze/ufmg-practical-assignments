@@ -25,7 +25,7 @@ def main():
 # Print the graph
 	# for i in range(0, c.N):
 	# 	for j in range(0, c.N):
-	# 		print('{0:.0f} '.format(graph[i][j].weight), end='')
+	# 		print('{0:.0f} '.format(graph[i][j].distance), end='')
 	# 	print('')
 
 	# for i in range(0, c.N):
