@@ -10,35 +10,25 @@ def main():
 	line = f.readline().split()
 	c.N, c.P = int(line[0]), int(line[1])
 	c.NUMBER_OF_ANTS = c.N - c.P
-	points = []
 	
-	line = f.readline().split()
-	points = points + [c.Point(int(line[0]), int(line[1]), int(line[2]), int(line[3]))]
-
+	points, id = [], 0
 	for line in f:
 		line = line.split()
-		points = points + [c.Point(int(line[0]), int(line[1]), int(line[2]), int(line[3]))]
+		points.append(c.Point(id, int(line[0]), int(line[1]), int(line[2]), int(line[3])))
+		id += 1
 
 	graph = aco.buildGraph(points) # c.N is the index of the imaginary point
-	aco.sumKNN(graph, points)
+	aco.aco(graph, points)
 
 # Print the graph
-	# for i in range(0, c.N):
-	# 	for j in range(0, c.N):
-	# 		print('{0:.0f} '.format(graph[i][j].distance), end='')
-	# 	print('')
-
-	# for i in range(0, c.N):
-	# 	print('P{0}: {1}'.format(i, points[i].s))
-
-	# x, y = [], []
-	# for i in points:
-	# 	x.append(i.x)
-	# 	y.append(i.y)
-
-	# plt.scatter(x, y)
-	# plt.show()
-
-	aco.aco(graph, points)
+	for i in range(0, c.N):
+		for j in range(0, c.N):
+			print('{0:.0f} '.format(graph[i][j]), end='')
+		print('')
+	
+"""
+	for i in range(0, c.N):
+		print('Point #' + str(i) + ': ' + str(points[i].knn_sum))
+"""
 
 main()
