@@ -18,15 +18,18 @@ def main():
 		id += 1
 
 	graph = aco.buildGraph(points) # c.N is the index of the imaginary point
+	aco.calculateDensity(points, graph)
 	aco.aco(graph, points)
 
+"""
 # Print the graph
 	for i in range(0, c.N):
 		for j in range(0, c.N):
 			print('{0:.0f} '.format(graph[i][j]), end='')
 		print('')
 	
-"""
+	for i in range(0, c.N):
+		print('Point #{0}: {1}'.format(i, points[i].density))
 	for i in range(0, c.N):
 		print('Point #' + str(i) + ': ' + str(points[i].knn_sum))
 """
