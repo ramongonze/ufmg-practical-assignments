@@ -15,14 +15,13 @@ class Point(object):
 #Parameters
 N = None # Number of Points
 P = None # Number of p-median
-ITERATIONS = 20 # Number of iterations, used as "generations"
+ITERATIONS = 10000 # Number of iterations, used as "generations"
 INITIAL_PHEROMONE = 0.5 # Initial pheromone
-NUMBER_OF_ANTS = None # The number of ants is equals to the number of nodes - number of p-median.
 IM_POINT = -1 # Index of the imaginary point in the graph
 RANDOM_FACTOR = 1 # A factor used to change the point[p].random_prob to > 0.
-DECAY = 0.9 # Its the decay rate of the pheromones trails.
+DECAY = 0.99 # Its the decay rate of the pheromones trails.
 ALPHA = 1 # A factor to give emphasis to the current pheromone level
-BETA = 1 # A factor to give emphasis to the point density
+BETA = 1.5 # A factor to give emphasis to the point density
 BEST_SOLUTION = None # The sum of all distances in the best solution found until that moment.
 B_SOLUTION_MATRIX = []# A matrix N x N (number of points) built by:
 					  # m[i][j] = 1 if the point i is allocated to the median j or i == j;

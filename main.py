@@ -1,37 +1,20 @@
 import constants as c
 import aco
-import sys
 import matplotlib.pyplot as plt
 
 def main():
 	# Data read
-	# Point is a list with c.Point instances, and it represents all the points in the space.
-	f = open(sys.argv[1], 'r')
-	line = f.readline().split()
-	c.N, c.P = int(line[0]), int(line[1])
-	c.NUMBER_OF_ANTS = c.N - c.P
-	
-	points, id = [], 0
-	for line in f:
-		line = line.split()
-		points.append(c.Point(id, int(line[0]), int(line[1]), int(line[2]), int(line[3])))
-		id += 1
+	points = aco.dataRead() # Point is a list with 'Point' instances, and it represents all the points in the space.
+	graph = aco.buildGraph(points) # N is the index of the imaginary point
+	aco.calculateDensity(points, graph) # Each point has a density, based in the distance of the nearests neighbors.
 
-	graph = aco.buildGraph(points) # c.N is the index of the imaginary point
-	aco.calculateDensity(points, graph)
-	aco.aco(graph, points)
-
-"""
-# Print the graph
-	for i in range(0, c.N):
-		for j in range(0, c.N):
-			print('{0:.0f} '.format(graph[i][j]), end='')
-		print('')
-	
-	for i in range(0, c.N):
-		print('Point #{0}: {1}'.format(i, points[i].density))
-	for i in range(0, c.N):
-		print('Point #' + str(i) + ': ' + str(points[i].knn_sum))
-"""
+	for t in range(1, c.ITERATIONS + 1):
+		p_medians = aco.chooseMedians(points, graph)
+		aco.buildSolution(p_medians, points, graph)
+		s_q = aco.solutionQuality(points, graph)
+		aco.saveBestSolution(s_q, points, graph)
+		print('BEST: ' + str(c.BEST_SOLUTION))
+		aco.updatePheromones(s_q, p_medians, points, graph)
+		aco.resetCapacity(points)
 
 main()

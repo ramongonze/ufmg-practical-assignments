@@ -1,11 +1,24 @@
 import constants as c
 import random
+import sys
 import operator as op
 
-random.seed(3)
+random.seed(7)
 
-def euclidianDistance(x0, x1, y0, y1):
-	return ((x0 - x1)**2 + (y0 - y1)**2)**(1/2)
+def dataRead():
+
+	f = open(sys.argv[1], 'r')
+	line = f.readline().split()
+	c.N, c.P = int(line[0]), int(line[1])
+	
+	points, id = [], 0
+	for line in f:
+		line = line.split()
+		points.append(c.Point(id, int(line[0]), int(line[1]), int(line[2]), int(line[3])))
+		id += 1
+
+	f.close()
+	return points
 
 def buildGraph(points):
 	"""
@@ -23,6 +36,42 @@ def buildGraph(points):
 		graph[i].append(c.INITIAL_PHEROMONE)
 
 	return graph
+
+def euclidianDistance(x0, x1, y0, y1):
+	return ((x0 - x1)**2 + (y0 - y1)**2)**(1/2)
+########################################################
+
+def calculateDensity(points, graph):
+	for p in range(0, c.N):
+		ordered_points = sortPoints(p, points, graph)
+		all_points, sum_distance = allocatePoints(p, ordered_points, points, graph)
+		points[p].density = all_points / sum_distance
+
+def sortPoints(p, points, graph):
+	# Sort all points based on their distance to node p(p = point.id).
+
+	ordered_points = points[:]
+	del ordered_points[p] # Remove the point p itself
+
+	for i in ordered_points:
+		i.point_distance = graph[p][i.id]
+
+	ordered_points.sort(key=op.attrgetter('point_distance'))
+
+	return ordered_points
+
+def allocatePoints(p, ordered_points, points, graph):
+	all_points, sum_distance, i = 0, 0, 0
+	while i < (c.N-1) and points[p].cur_c <= points[p].c: # While the capacity have not exceeded
+		if (points[p].cur_c + ordered_points[i].d) <= points[p].c:
+			points[p].cur_c += ordered_points[i].d
+			all_points += 1
+			sum_distance += graph[p][ordered_points[i].id]
+		i += 1
+	resetCapacity(points)
+	return all_points, sum_distance
+
+########################################################
 
 def binarySearch(item, points):
 	# Returns the index of a point in the array "points". Used to choose randomly a point.
@@ -42,26 +91,30 @@ def binarySearch(item, points):
 	else:
 		return end
 
-def chooseMedians(graph, points):
+def chooseMedians(points, graph):
 	# According to pheronomes among the imaginary point and the other points, choose P medians.
 	medians = []
 
 	points_aux, min_value = points[:], None
-	for i in range(0, c.P): # Choose 'P' medians.
+	for i in range(0, c.P): # Choose p medians.
+		# Put the probabilities in a roullete of integers, and take one random integer.
 		points_aux[0].random_prob = (graph[0][c.IM_POINT])**c.ALPHA * (points_aux[0].density)**c.BETA
-		if min_value == None:
+		if min_value == None or min_value > points_aux[0].random_prob:
 			min_value = points_aux[0].random_prob
-		elif min_value > points_aux[0].random_prob:
-			min_value = points_aux[0].random_prob
-		for i in range(1, len(points_aux)):
-			points_aux[i].random_prob = points_aux[i-1].random_prob + ((graph[i][c.IM_POINT])**c.ALPHA * (points_aux[i].density)**c.BETA)
-			if min_value > ((graph[i][c.IM_POINT])**c.ALPHA * (points_aux[i].density)**c.BETA):
-				min_value = ((graph[i][c.IM_POINT])**c.ALPHA * (points_aux[i].density)**c.BETA)
+		
+		for j in range(1, (c.N-i)):
+			points_aux[j].random_prob = points_aux[j-1].random_prob + ((graph[j][c.IM_POINT])**c.ALPHA * (points_aux[j].density)**c.BETA)
+			if min_value > points_aux[j].random_prob - points_aux[j-1].random_prob:	
+				min_value = points_aux[j].random_prob - points_aux[j-1].random_prob
 		
 		# Change all the probabilities to > 0.
-		while int(min_value*c.RANDOM_FACTOR) == 0:
-			c.RANDOM_FACTOR *= 10
-		for p in range(0, len(points_aux)):
+		try:
+			while int(min_value*c.RANDOM_FACTOR) == 0:
+				c.RANDOM_FACTOR *= 100
+		except:
+			continue
+
+		for p in range(0, (c.N-i)):
 			points_aux[p].random_prob *= c.RANDOM_FACTOR
 		total_pheromone = points_aux[-1].random_prob
 
@@ -73,67 +126,28 @@ def chooseMedians(graph, points):
 
 	return medians # Return an index list of the points choosed as medians.
 
-def calculateDensity(points, graph):
-	for p in range(0, c.N):
-		ordered_points = sortPoints(p, points, graph)
-		all_points, sum_distance = allocatePoints(p, ordered_points, points, graph)
-		points[p].density = all_points / sum_distance
-
-def allocatePoints(p, ordered_points, points, graph):
-	all_points, sum_distance, i = 0, 0, 0
-	while i < (c.N-1) and points[p].cur_c <= points[p].c: # While the capacity have not exceeded
-		if (points[p].cur_c + ordered_points[i].d) <= points[p].c:
-			points[p].cur_c += ordered_points[i].d
-			all_points += 1
-			sum_distance += graph[p][ordered_points[i].id]
-		i += 1
-	resetCapacity(points)
-	return all_points, sum_distance
-
-def sortPoints(p, points, graph):
-	# Sort all points based on their distance to node p(p = point.id).
-
-	ordered_points = points[:]
-	del ordered_points[p] # Remove the point p itself
-
-	for i in ordered_points:
-		i.point_distance = graph[p][i.id]
-
-	ordered_points.sort(key=op.attrgetter('point_distance'))
-
-	return ordered_points
-
-def aco(graph, points):
-
-	for t in range(1, c.ITERATIONS + 1):
-		p_medians = chooseMedians(graph, points)
-		buildSolution(p_medians, points, graph)
-		s_q = solutionQuality(points, graph)
-		updatePheromones(s_q, p_medians, graph)
-		saveBestSolution(s_q, points, graph)
-		print('BEST: ' + str(c.BEST_SOLUTION))
-		resetCapacity(points)
-
+########################################################
 
 def saveBestSolution(s_q, points, graph):
-	if c.BEST_SOLUTION == None:
-		c.BEST_SOLUTION = s_q
-		for i in range(0, c.N):
-			c.B_SOLUTION_MATRIX.append([])
-			for j in range(0, c.N):
-				if points[i].attended_by == j:
-					c.B_SOLUTION_MATRIX[i].append(1)
-				else:
-					c.B_SOLUTION_MATRIX[i].append(0)
+	if s_q > 0:
+		if c.BEST_SOLUTION == None:
+			c.BEST_SOLUTION = s_q
+			for i in range(0, c.N):
+				c.B_SOLUTION_MATRIX.append([])
+				for j in range(0, c.N):
+					if points[i].attended_by == j:
+						c.B_SOLUTION_MATRIX[i].append(1)
+					else:
+						c.B_SOLUTION_MATRIX[i].append(0)
 
-	elif s_q < c.BEST_SOLUTION:
-		c.BEST_SOLUTION = s_q
-		for i in range(0, c.N):
-			for j in range(0, c.N):
-				if points[i].attended_by == j:
-					c.B_SOLUTION_MATRIX[i][j] = 1
-				else:
-					c.B_SOLUTION_MATRIX[i][j] = 0
+		elif s_q < c.BEST_SOLUTION:
+			c.BEST_SOLUTION = s_q
+			for i in range(0, c.N):
+				for j in range(0, c.N):
+					if points[i].attended_by == j:
+						c.B_SOLUTION_MATRIX[i][j] = 1
+					else:
+						c.B_SOLUTION_MATRIX[i][j] = 0
 
 def buildSolution(p_medians, points, graph):
 	ordered_rem_points = sortRemPoints(p_medians, points, graph) # Ordered remaining points, according to the nearest median
@@ -173,17 +187,27 @@ def sortMedians(p, p_medians, points, graph):
 	return sorted_medians # Returns a list of objects
 
 def solutionQuality(points, graph):
+	# Test if its a valid solution or not
 	distances_sum = 0
 	for p in points:
-		distances_sum += graph[p.id][p.attended_by]
+		if p.attended_by == None:
+			return -100000
+		else:
+			distances_sum += graph[p.id][p.attended_by]
 
 	return distances_sum
 
-def updatePheromones(s_q, p_medians, graph):
-	for m in p_medians:
-		graph[m][-1] = (c.DECAY * graph[m][-1]) + (1/s_q)
+def updatePheromones(s_q, p_medians, points, graph):
+	for p in points:
+		graph[p.id][-1] = c.DECAY * graph[p.id][-1]
+		if p.id in p_medians:
+			graph[p.id][-1] += 1/s_q
 
 def resetCapacity(points):
 	for p in points:
 		p.cur_c = p.d
-
+		p.attended_by = None
+		p.random_prob = None
+		p.nearest_median = None
+		p.point_distance = None
+		c.RANDOM_FACTOR = 1
