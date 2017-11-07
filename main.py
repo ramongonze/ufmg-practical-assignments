@@ -1,6 +1,6 @@
 import graph as g
 import aco
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def main():
 	# Data read
@@ -13,8 +13,9 @@ def main():
 		aco.buildSolution(p_medians, points, graph)
 		s_q = aco.solutionQuality(points, graph)
 		aco.saveBestSolution(s_q, points, graph)
-		print('BEST: ' + str(aco.BEST_SOLUTION))
-		aco.updatePheromones(s_q, p_medians, points, graph)
+		aco.updatePheromones(s_q, p_medians, points, graph, t)
 		aco.resetCapacity(points)
 
-main()
+	aco.printBestSolution()
+
+main()	

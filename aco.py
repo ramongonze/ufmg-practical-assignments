@@ -1,7 +1,8 @@
-import random
 import operator as op
+import random
+import graph as g
 
-random.seed(100)
+random.seed(5)
 
 #Parameters
 N = None # Number of Points
@@ -11,6 +12,7 @@ INITIAL_PHEROMONE = 0.5 # Initial pheromone
 IM_POINT = -1 # Index of the imaginary point in the graph
 RANDOM_FACTOR = 1 # A factor used to change the point[p].random_prob to > 0.
 DECAY = 0.99 # Its the decay rate of the pheromones trails.
+CONST_FOR_INVALID_SOLUTION = -100000
 ALPHA = 1 # A factor to give emphasis to the current pheromone level
 BETA = 1 # A factor to give emphasis to the point density
 BEST_SOLUTION = None # The sum of all distances in the best solution found until that moment.
@@ -141,17 +143,36 @@ def solutionQuality(points, graph):
 	distances_sum = 0
 	for p in points:
 		if p.attended_by == None:
-			return -100000
+			return CONST_FOR_INVALID_SOLUTION
 		else:
 			distances_sum += graph[p.id][p.attended_by]
 
 	return distances_sum
 
-def updatePheromones(s_q, p_medians, points, graph):
+def updatePheromones(s_q, p_medians, points, graph, t):
+	# Factors used to set the maximum and minimum pheromone value.
+	phe_sum = 1
+	for i in range(1, N+1):
+		phe_sum += DECAY**(t-i)
+	if len(g.sys.argv) > 2: # The optimal solution is known.
+		F = float(g.sys.argv[2])
+	elif t == 1:
+		F = 1
+	else:
+		F = 1/BEST_SOLUTION
+	
+	MAX_PHEROMONE = (1/(1-DECAY))*(1/F)
+	MIN_PHEROMONE = MAX_PHEROMONE/ (2*N)
+
 	for p in points:
 		graph[p.id][-1] = DECAY * graph[p.id][-1]
 		if p.id in p_medians:
 			graph[p.id][-1] += 1/s_q
+
+		if graph[p.id][-1] < MIN_PHEROMONE :# Test the minimum
+			graph[p.id][-1] = MIN_PHEROMONE
+		elif graph[p.id][-1] > MAX_PHEROMONE: # Test the maximum
+			graph[p.id][-1] = MAX_PHEROMONE
 
 def resetCapacity(points):
 	for p in points:
@@ -161,3 +182,12 @@ def resetCapacity(points):
 		p.nearest_median = None
 		p.point_distance = None
 		RANDOM_FACTOR = 1
+
+def printBestSolution():
+	print(BEST_SOLUTION)
+	for i in range(0, N):
+		for j in range(0, N):
+			if j != (N-1):
+				print(str(B_SOLUTION_MATRIX[i][j]) + ',', end='')
+			else:
+				print(B_SOLUTION_MATRIX[i][j])
