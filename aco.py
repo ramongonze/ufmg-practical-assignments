@@ -1,77 +1,23 @@
-import constants as c
 import random
-import sys
 import operator as op
 
-random.seed(7)
+random.seed(100)
 
-def dataRead():
+#Parameters
+N = None # Number of Points
+P = None # Number of p-median
+ITERATIONS = 10000 # Number of iterations, used as "generations"
+INITIAL_PHEROMONE = 0.5 # Initial pheromone
+IM_POINT = -1 # Index of the imaginary point in the graph
+RANDOM_FACTOR = 1 # A factor used to change the point[p].random_prob to > 0.
+DECAY = 0.99 # Its the decay rate of the pheromones trails.
+ALPHA = 1 # A factor to give emphasis to the current pheromone level
+BETA = 1 # A factor to give emphasis to the point density
+BEST_SOLUTION = None # The sum of all distances in the best solution found until that moment.
+B_SOLUTION_MATRIX = []# A matrix N x N (number of points) built by:
+					  # m[i][j] = 1 if the point i is allocated to the median j or i == j;
+					  #           0 otherwise
 
-	f = open(sys.argv[1], 'r')
-	line = f.readline().split()
-	c.N, c.P = int(line[0]), int(line[1])
-	
-	points, id = [], 0
-	for line in f:
-		line = line.split()
-		points.append(c.Point(id, int(line[0]), int(line[1]), int(line[2]), int(line[3])))
-		id += 1
-
-	f.close()
-	return points
-
-def buildGraph(points):
-	"""
-	- It builds a graph with the points using an adjacency matrix.
-	- graph[i][j] contains the Euclidian distance between the nodes i and j. 
-	- The graph is undirected and there isn't an edge from one node to itself.
-	- The last matrix column represents the quantity of pheromone among the immaginary point with all the points of the graph.
-	"""
-	graph = []
-
-	for i in range(0, c.N):
-		graph.append([])
-		for j in range(0, c.N):
-			graph[i].append(euclidianDistance(points[i].x, points[j].x, points[i].y, points[j].y))
-		graph[i].append(c.INITIAL_PHEROMONE)
-
-	return graph
-
-def euclidianDistance(x0, x1, y0, y1):
-	return ((x0 - x1)**2 + (y0 - y1)**2)**(1/2)
-########################################################
-
-def calculateDensity(points, graph):
-	for p in range(0, c.N):
-		ordered_points = sortPoints(p, points, graph)
-		all_points, sum_distance = allocatePoints(p, ordered_points, points, graph)
-		points[p].density = all_points / sum_distance
-
-def sortPoints(p, points, graph):
-	# Sort all points based on their distance to node p(p = point.id).
-
-	ordered_points = points[:]
-	del ordered_points[p] # Remove the point p itself
-
-	for i in ordered_points:
-		i.point_distance = graph[p][i.id]
-
-	ordered_points.sort(key=op.attrgetter('point_distance'))
-
-	return ordered_points
-
-def allocatePoints(p, ordered_points, points, graph):
-	all_points, sum_distance, i = 0, 0, 0
-	while i < (c.N-1) and points[p].cur_c <= points[p].c: # While the capacity have not exceeded
-		if (points[p].cur_c + ordered_points[i].d) <= points[p].c:
-			points[p].cur_c += ordered_points[i].d
-			all_points += 1
-			sum_distance += graph[p][ordered_points[i].id]
-		i += 1
-	resetCapacity(points)
-	return all_points, sum_distance
-
-########################################################
 
 def binarySearch(item, points):
 	# Returns the index of a point in the array "points". Used to choose randomly a point.
@@ -96,26 +42,28 @@ def chooseMedians(points, graph):
 	medians = []
 
 	points_aux, min_value = points[:], None
-	for i in range(0, c.P): # Choose p medians.
+	for i in range(0, P): # Choose p medians.
+
 		# Put the probabilities in a roullete of integers, and take one random integer.
-		points_aux[0].random_prob = (graph[0][c.IM_POINT])**c.ALPHA * (points_aux[0].density)**c.BETA
+		points_aux[0].random_prob = (graph[0][IM_POINT])**ALPHA * (points_aux[0].density)**BETA
 		if min_value == None or min_value > points_aux[0].random_prob:
 			min_value = points_aux[0].random_prob
 		
-		for j in range(1, (c.N-i)):
-			points_aux[j].random_prob = points_aux[j-1].random_prob + ((graph[j][c.IM_POINT])**c.ALPHA * (points_aux[j].density)**c.BETA)
+		for j in range(1, (N-i)):
+			points_aux[j].random_prob = points_aux[j-1].random_prob + ((graph[j][IM_POINT])**ALPHA * (points_aux[j].density)**BETA)
 			if min_value > points_aux[j].random_prob - points_aux[j-1].random_prob:	
 				min_value = points_aux[j].random_prob - points_aux[j-1].random_prob
 		
 		# Change all the probabilities to > 0.
+		global RANDOM_FACTOR
 		try:
-			while int(min_value*c.RANDOM_FACTOR) == 0:
-				c.RANDOM_FACTOR *= 100
+			while int(min_value*RANDOM_FACTOR) == 0:
+				RANDOM_FACTOR *= 100
 		except:
-			continue
-
-		for p in range(0, (c.N-i)):
-			points_aux[p].random_prob *= c.RANDOM_FACTOR
+			None
+		
+		for p in range(0, (N-i)):
+			points_aux[p].random_prob *= RANDOM_FACTOR
 		total_pheromone = points_aux[-1].random_prob
 
 		# Choose a point
@@ -129,25 +77,27 @@ def chooseMedians(points, graph):
 ########################################################
 
 def saveBestSolution(s_q, points, graph):
+	global BEST_SOLUTION
+	global B_SOLUTION_MATRIX
 	if s_q > 0:
-		if c.BEST_SOLUTION == None:
-			c.BEST_SOLUTION = s_q
-			for i in range(0, c.N):
-				c.B_SOLUTION_MATRIX.append([])
-				for j in range(0, c.N):
+		if BEST_SOLUTION == None:
+			BEST_SOLUTION = s_q
+			for i in range(0, N):
+				B_SOLUTION_MATRIX.append([])
+				for j in range(0, N):
 					if points[i].attended_by == j:
-						c.B_SOLUTION_MATRIX[i].append(1)
+						B_SOLUTION_MATRIX[i].append(1)
 					else:
-						c.B_SOLUTION_MATRIX[i].append(0)
+						B_SOLUTION_MATRIX[i].append(0)
 
-		elif s_q < c.BEST_SOLUTION:
-			c.BEST_SOLUTION = s_q
-			for i in range(0, c.N):
-				for j in range(0, c.N):
+		elif s_q < BEST_SOLUTION:
+			BEST_SOLUTION = s_q
+			for i in range(0, N):
+				for j in range(0, N):
 					if points[i].attended_by == j:
-						c.B_SOLUTION_MATRIX[i][j] = 1
+						B_SOLUTION_MATRIX[i][j] = 1
 					else:
-						c.B_SOLUTION_MATRIX[i][j] = 0
+						B_SOLUTION_MATRIX[i][j] = 0
 
 def buildSolution(p_medians, points, graph):
 	ordered_rem_points = sortRemPoints(p_medians, points, graph) # Ordered remaining points, according to the nearest median
@@ -162,7 +112,7 @@ def buildSolution(p_medians, points, graph):
 
 def sortRemPoints(p_medians, points, graph):
 	sorted_points = [] # All the points aren't medians
-	for i in range(0, c.N):
+	for i in range(0, N):
 		if points[i].attended_by != i: # Ignore the medians
 			aux_list = [] # aux_list will contain all the distances among the point 'i' and the p_medians
 			for j in p_medians:
@@ -199,7 +149,7 @@ def solutionQuality(points, graph):
 
 def updatePheromones(s_q, p_medians, points, graph):
 	for p in points:
-		graph[p.id][-1] = c.DECAY * graph[p.id][-1]
+		graph[p.id][-1] = DECAY * graph[p.id][-1]
 		if p.id in p_medians:
 			graph[p.id][-1] += 1/s_q
 
@@ -210,4 +160,4 @@ def resetCapacity(points):
 		p.random_prob = None
 		p.nearest_median = None
 		p.point_distance = None
-		c.RANDOM_FACTOR = 1
+		RANDOM_FACTOR = 1
