@@ -184,10 +184,14 @@ def resetCapacity(points):
 		RANDOM_FACTOR = 1
 
 def printBestSolution():
-	print(BEST_SOLUTION)
-	for i in range(0, N):
-		for j in range(0, N):
-			if j != (N-1):
-				print(str(B_SOLUTION_MATRIX[i][j]) + ',', end='')
-			else:
-				print(B_SOLUTION_MATRIX[i][j])
+	
+	if BEST_SOLUTION == None:
+		print('No valid solution generated!')
+	else:
+		print(BEST_SOLUTION)
+		for i in range(0, N):
+			for j in range(0, N):
+				if j != (N-1):
+					print(str(B_SOLUTION_MATRIX[i][j]) + ',', end='')
+				else:
+					print(B_SOLUTION_MATRIX[i][j])
