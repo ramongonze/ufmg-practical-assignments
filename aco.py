@@ -2,19 +2,18 @@ import operator as op
 import random
 import graph as g
 
-random.seed(5)
+random.seed() # Seed used to generate random numbers.
 
-#Parameters
 N = None # Number of Points
 P = None # Number of p-median
-ITERATIONS = 10000 # Number of iterations, used as "generations"
+ITERATIONS = 100 # Number of iterations, used as "generations"
 INITIAL_PHEROMONE = 0.5 # Initial pheromone
 IM_POINT = -1 # Index of the imaginary point in the graph
 RANDOM_FACTOR = 1 # A factor used to change the point[p].random_prob to > 0.
-DECAY = 0.99 # Its the decay rate of the pheromones trails.
-CONST_FOR_INVALID_SOLUTION = -100000
+DECAY = 0.95 # Its the decay rate of the pheromones trails.
+CONST_FOR_INVALID_SOLUTION = -100000 # When an invalid solution is generated, the medians in the solution must have their pheromone decreased.
 ALPHA = 1 # A factor to give emphasis to the current pheromone level
-BETA = 1 # A factor to give emphasis to the point density
+BETA = 1.5 # A factor to give emphasis to the point density
 BEST_SOLUTION = None # The sum of all distances in the best solution found until that moment.
 B_SOLUTION_MATRIX = []# A matrix N x N (number of points) built by:
 					  # m[i][j] = 1 if the point i is allocated to the median j or i == j;
@@ -75,8 +74,6 @@ def chooseMedians(points, graph):
 		del points_aux[p]
 
 	return medians # Return an index list of the points choosed as medians.
-
-########################################################
 
 def saveBestSolution(s_q, points, graph):
 	global BEST_SOLUTION
@@ -149,14 +146,11 @@ def solutionQuality(points, graph):
 
 	return distances_sum
 
-def updatePheromones(s_q, p_medians, points, graph, t):
+def updatePheromones(s_q, p_medians, points, graph):
 	# Factors used to set the maximum and minimum pheromone value.
-	phe_sum = 1
-	for i in range(1, N+1):
-		phe_sum += DECAY**(t-i)
 	if len(g.sys.argv) > 2: # The optimal solution is known.
 		F = float(g.sys.argv[2])
-	elif t == 1:
+	elif BEST_SOLUTION == None:
 		F = 1
 	else:
 		F = 1/BEST_SOLUTION
@@ -175,6 +169,7 @@ def updatePheromones(s_q, p_medians, points, graph, t):
 			graph[p.id][-1] = MAX_PHEROMONE
 
 def resetCapacity(points):
+	# Reset some varibles, to the initial stage.
 	for p in points:
 		p.cur_c = p.d
 		p.attended_by = None
@@ -184,7 +179,7 @@ def resetCapacity(points):
 		RANDOM_FACTOR = 1
 
 def printBestSolution():
-	
+	# Print the best solution and its matrix, which represents the points allocation with medians.
 	if BEST_SOLUTION == None:
 		print('No valid solution generated!')
 	else:

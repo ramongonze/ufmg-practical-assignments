@@ -3,6 +3,7 @@ import sys
 import aco
 
 class Point(object):
+	
 	def __init__(self, id, x, y, c, d, density=None, cur_c=0, attended_by=None, random_prob=None, nearest_median=None, point_distance=None):
 		self.id = id # Point id according the 'points' array
 		self.x = x # Point x in the cartesian plane
@@ -15,7 +16,6 @@ class Point(object):
 		self.random_prob = random_prob # Used to select points randomly.
 		self.nearest_median = nearest_median # Used to create a sorted list of points in ascending order, in function sortRemPoints().
 		self.point_distance = point_distance # Used to create a sorted list of medians in ascending order, in function sortMedians().
-
 
 def dataRead():
 
@@ -39,6 +39,7 @@ def buildGraph(points):
 	- The graph is undirected and there isn't an edge from one node to itself.
 	- The last matrix column represents the quantity of pheromone among the immaginary point with all the points of the graph.
 	"""
+
 	graph = []
 
 	for i in range(0, aco.N):
@@ -51,9 +52,10 @@ def buildGraph(points):
 
 def euclidianDistance(x0, x1, y0, y1):
 	return ((x0 - x1)**2 + (y0 - y1)**2)**(1/2)
-########################################################
 
 def calculateDensity(points, graph):
+	# Calculates the point density, for all the points in the space.
+	
 	for p in range(0, aco.N):
 		ordered_points = sortPoints(p, points, graph)
 		all_points, sum_distance = allocatePoints(p, ordered_points, points, graph)
@@ -73,6 +75,8 @@ def sortPoints(p, points, graph):
 	return ordered_points
 
 def allocatePoints(p, ordered_points, points, graph):
+	# Assigns each point in ordered_points to p, untiil its capacity is reached
+	
 	all_points, sum_distance, i = 0, 0, 0
 	while i < (aco.N-1) and points[p].cur_c <= points[p].c: # While the capacity have not exceeded
 		if (points[p].cur_c + ordered_points[i].d) <= points[p].c:
