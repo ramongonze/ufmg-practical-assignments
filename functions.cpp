@@ -1,6 +1,6 @@
 #include "functions.h"
 
-Graph readData(char *train, set<string> &itens){
+Graph readData(char *train){
 	FILE *input;
 	char buffer[MAX_STR_LENGTH], user[MAX_STR_LENGTH], item[MAX_STR_LENGTH];
 	int rating;
@@ -17,100 +17,85 @@ Graph readData(char *train, set<string> &itens){
 			rating = atoi(strtok(NULL, ","));
 			timestamp = atol(strtok(NULL, "\n"));
 
-			itens.insert(item);
-
 			addEdge(G, user, item, rating);
 			addEdge(G, item, user, rating);
+
+			G[user].mean += rating;
+			G[item].mean += rating;
 		}
 	}
+
+	/* In the end of the execution of readData() each attribute "mean" of
+	   all vertexes v in G will contains the sum of all rates given (in case
+	   of v == user) or received (in case of v == item) by v */
 
 	fclose(input);
 	return G;
 }
 
-void calculateMeans(Graph &G){
-	double sum;
-
-	for(map<string, Vertex>::iterator v = G.begin(); v != G.end(); v++){
-		if(v->first[0] == 'u'){ /* Is an user */
-			sum = 0;
-			for(map<string, int>::iterator u = v->second.Adj.begin(); u != v->second.Adj.end(); u++){
-				sum += u->second;
-			}
-		}
-
-		if(v->second.Adj.size() == 0){
-			v->second.mean = (double)0;
-		}else{
-			v->second.mean = (double)(sum/v->second.Adj.size());
-		}
+void computeMeans(Graph &G){
+	for(Graph::iterator v = G.begin(); v != G.end(); v++){
+		v->second.mean /= v->second.Adj.size();
 	}
 }
 
-double pearsonCorrelation(Graph G, string i, string j){
-	double similarity, sum, sig1, sig2;
-	set<string> Uij; 
-
-	for(map<string, int>::iterator i1 = G[i].Adj.begin(); i1 != G[i].Adj.end(); i1++){
-		if(G[j].Adj.find(i1->first) != G[j].Adj.end()){
-			Uij.insert(i1->first);
+double sim(Graph &G, string i, string j){
+	double sum, sig1, sig2;
+	int k; // Minimum number of neighbors in common
+	sum = sig1 = sig2 = k = 0;
+	for(map<string, int>::iterator u1 = G[i].Adj.begin(), u2 = G[j].Adj.begin(); u1 != G[i].Adj.end() || u2 != G[j].Adj.end();){
+		
+		if(u1 != G[i].Adj.end() && G[i].Adj.find(u1->first) != G[i].Adj.end()){
+			sig1 += G[i].Adj[u1->first] * G[i].Adj[u1->first];
 		}
+		
+		if(u2 != G[j].Adj.end() && G[j].Adj.find(u2->first) != G[j].Adj.end()){
+			sig2 += G[j].Adj[u2->first] * G[j].Adj[u2->first];
+		}
+		
+		if(u1 != G[i].Adj.end() && G[i].Adj.find(u1->first) != G[i].Adj.end() && G[j].Adj.find(u1->first) != G[j].Adj.end()){
+			sum += G[i].Adj[u1->first] * G[j].Adj[u1->first];
+			k++;
+		}
+
+		if(u1 != G[i].Adj.end()) u1++;
+		if(u2 != G[j].Adj.end()) u2++;
 	}
 
-	/* Uij = Set of all users who have rated both itens i and j */
-	sum = sig1 = sig2 = 0;
-	for(set<string>::iterator u = Uij.begin(); u != Uij.end(); u++){ /* For each user in Uij */
-		sum += -(G[*u].mean)*(G[*u].Adj[i] * G[*u].Adj[j]);
-		sig1 += pow((G[*u].Adj[i] - G[*u].mean), 2);
-		sig2 += pow((G[*u].Adj[j] - G[*u].mean), 2);
-	}
-
-	sig1 = sqrt(sig1);
-	sig2 = sqrt(sig2);
-
-	if((sig1*sig2) == 0){
-		similarity = 0;
+	if(sig1 > 0 && sig2 > 0 && k >= 20){
+		return sum/ (sqrt(sig1) * sqrt(sig2));
 	}else{
-		similarity = sum/(sig1 * sig2);
+		return 0.5;
 	}
-
-	return similarity;
 }
 
-double predictRate(Graph G, string user, string item){
-	int k, n;
-	double sum, sum2, prediction;
-	vector< pair<double, string> > rates;
+void computeSimilarity(Graph &G, string user, string item, map<string, map<string, double> > &M){
 
-	k = 20; /* Minimum number of neighbor an item needs to calculate the mean-centering */
-	n = 2; /* n nearest neighbors of an item */
-	if(G[user].Adj.size() < k){
-		/* There are few neighbors. So calculate using CF approach: average rating */
-		sum = 0;
-		for(map<string, int>::iterator i = G[item].Adj.begin(); i != G[item].Adj.end(); i++){
-			sum += i->second;
+	for(map<string, int>::iterator j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
+		if(G.find(item) == G.end()){
+			// The item has never been seen
+			M[item][j->first] = 0.5;
+			M[j->first][item] = 0.5;
+		}else if(item != j->first && M[item].find(j->first) == M[item].end()){
+			// The similarity between 'item' and 'j' has not been calculated
+			M[item][j->first] = sim(G, item, j->first);
+			M[j->first][item] = M[item][j->first]; 
 		}
-		if(G[item].Adj.size() == 0){
-			prediction = 0;
-		}else{
-			prediction = sum/G[item].Adj.size();
-		}
+	}
+
+}
+
+double predict(Graph &G, string user, string item, map<string, map<string, double> > &M){
+	double prediction = 0;
+
+	for(map<string, int>::iterator r = G[user].Adj.begin(); r != G[user].Adj.end(); r++){
+		prediction += M[item][r->first] * r->second;
+	}
+
+	if(prediction == 0){
+		prediction = 5.0;
 	}else{
-		/* There are at least k neighbors */
-		for(map<string, int>::iterator j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
-			/* For each item that the user has rated, calculates the similarity between item and j, with item != j */
-			if(item != j->first){
-				rates.push_back(make_pair(pearsonCorrelation(G, item, j->first), j->first));
-			}
-		}
-				
-		sort(rates.rbegin(), rates.rend());
-		sum = sum2 = 0;
-		for(int i = 0; i < n; i++){
-			sum += rates[i].first * G[user].Adj[rates[i].second];
-			sum2 += abs(rates[i].first);
-		}
-		prediction = sum/sum2;
+		prediction /= G[user].Adj.size();
 	}
 
 	return prediction;

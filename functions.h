@@ -14,15 +14,18 @@
 
 #define MAX_STR_LENGTH 200
 
-/* Read the train dataset, and returns a graph with users and itens */
-Graph readData(char *train, set<string> &itens);
+// Read the train dataset, and returns a graph with users and itens.
+Graph readData(char *train);
 
-/* For all u in set of Users, it calculates the mean of all rates from u.
-   It is used to normalize the user rating. */
-void calculateMeans(Graph &G);
+// For all u in set of Users, it calculates the mean of all rates from u.
+// It is used to normalize the user rating.
+void computeMeans(Graph &G);
 
-/* Calculates the similarity between two itens (i, j), using the Pearson's correlation*/
-double pearsonCorrelation(Graph G, string i, string j);
+// Computes the cosine similarity between itens i and j in the set of users U
+double sim(Graph &G, string i, string j);
 
-/* Predicts the rate from 'user' to 'item' */
-double predictRate(Graph G, string user, string item);
+// Computes the cosine similarity between all users and itens of selects
+// for predictions user->item.
+void computeSimilarity(Graph &G, string user, string item, map<string, map<string, double> > &M);
+
+double predict(Graph &G, string user, string item, map<string, map<string, double> > &M);
