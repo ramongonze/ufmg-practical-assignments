@@ -39,6 +39,11 @@ int main(int argc, char *argv[]){
 				prediction = predict(G, user, item, M);
 			}
 
+			if(prediction <= 0)
+				prediction = 3.5;
+			else if(prediction > 10)
+				prediction = 10;
+
 			printf("%s:%s,%lf\n", user, item, prediction);
 		}
 	}
