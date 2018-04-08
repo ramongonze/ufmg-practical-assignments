@@ -13,7 +13,7 @@
 #endif
 
 #define MAX_STR_LENGTH 200
-#define MIN_NEIGHBORHOOD 20
+#define MIN_NEIGHBORHOOD 10
 
 // Read the train dataset, and returns a graph with users and itens.
 Graph readData(char *train);
