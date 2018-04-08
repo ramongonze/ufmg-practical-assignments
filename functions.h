@@ -17,10 +17,6 @@
 // Read the train dataset, and returns a graph with users and itens.
 Graph readData(char *train);
 
-// For all u in set of Users, it calculates the mean of all rates from u.
-// It is used to normalize the user rating.
-void computeMeans(Graph &G);
-
 // Computes the cosine similarity between itens i and j in the set of users U
 double sim(Graph &G, string i, string j);
 
