@@ -30,17 +30,20 @@ int main(int argc, char *argv[]){
 			strcpy(user, strtok(buffer, ":"));
 			strcpy(item, strtok(NULL, "\n"));
 
-			if(G.find(item) == G.end())
-				prediction = G[user].mean;
-			else if(G.find(user) == G.end())
-				prediction = 5.0;
+			if(G.find(item) == G.end()){
+				if(G.find(user) != G.end())
+					prediction = G[user].mean;
+				else
+					prediction = 5.0;
+			}else if(G.find(user) == G.end())
+				prediction = G[item].mean;
 			else{
 				computeSimilarity(G, user, item, M);
 				prediction = predict(G, user, item, M);
 			}
 
-			if(prediction <= 0)
-				prediction = 3.5;
+			if(prediction < 0)
+				prediction = 0;
 			else if(prediction > 10)
 				prediction = 10;
 
