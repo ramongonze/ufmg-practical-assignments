@@ -41,20 +41,20 @@ double sim(Graph &G, string i, string j){
 	sum = sig1 = sig2 = k = 0;
 	for(map<string, int>::iterator u1 = G[s1].Adj.begin(), u2 = G[s2].Adj.begin(); u2 != G[s2].Adj.end(); u2++){
 		if(u1 != G[s1].Adj.end()){
-			sig1  += pow(u1->second - G[u1->first].mean, 2);
+			sig1  += (u1->second * u1->second);
 
 			if(G[s2].Adj.find(u1->first) != G[s2].Adj.end()){
-				sum += ((u1->second - G[u1->first].mean) * (u2->second - G[u2->first].mean));
+				sum += (u1->second * u2->second);
 				k++;
 			}
 
 			u1++;
 		}
 
-		sig2 += pow(u2->second - G[u2->first].mean, 2);
+		sig2 += (u2->second * u2->second);
 	}
 
-	if(sig1 > 0 && sig2 > 0 && k >= 20){
+	if(sig1 > 0 && sig2 > 0 && k >= MIN_NEIGHBORHOOD){
 		return sum/ (sqrt(sig1) * sqrt(sig2));
 	}else{
 		return 0.5;
