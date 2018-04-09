@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
 				prediction = G[item].mean;
 			else{
 				computeSimilarity(G, user, item, M);
-				prediction = predict(G, user, item, M);
+				prediction = predict(G, user, item, M) + 3.0;
 			}
 
 			if(prediction < 0)
