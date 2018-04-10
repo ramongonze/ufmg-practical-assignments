@@ -38,8 +38,7 @@ int main(int argc, char *argv[]){
 			}else if(G.find(user) == G.end())
 				prediction = G[item].mean;
 			else{
-				computeSimilarity(G, user, item, M);
-				prediction = predict(G, user, item, M) + 3.0;
+				prediction = predict(G, user, item, M);
 			}
 
 			if(prediction < 0)
@@ -51,6 +50,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 	fclose(target);
+
 
 	return 0;
 }

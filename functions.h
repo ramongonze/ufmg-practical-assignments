@@ -13,7 +13,7 @@
 #endif
 
 #define MAX_STR_LENGTH 200
-#define MIN_NEIGHBORHOOD 20
+#define NEIGHBORHOOD 20
 
 // Read the train dataset, and returns a graph with users and itens.
 Graph readData(char *train);
@@ -22,7 +22,5 @@ Graph readData(char *train);
 double sim(Graph &G, string i, string j);
 
 // Computes the cosine similarity between all users and itens of selects
-// for predictions user->item.
-void computeSimilarity(Graph &G, string user, string item, map<string, map<string, double> > &M);
-
-double predict(Graph &G, string user, string item, map<string, map<string, double> > &M);
+// for predictions user->i.
+double predict(Graph &G, string user, string i, map<string, map<string, double> > &M);

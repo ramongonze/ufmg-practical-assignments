@@ -22,14 +22,18 @@ Graph readData(char *train){
 		}
 	}
 
+	for(Graph::iterator i = G.begin(); i != G.end(); i++)
+		if((i->first)[0] == 'i')
+			G[i->first].sig = sqrt(G[i->first].sig);
+
 	fclose(input);
 	return G;
 }
 
 double sim(Graph &G, string i, string j){
-	double sum, sig1, sig2;
-	int k; // Minimum number of neighbors in common
+	double sum;
 	string s1,s2;
+	vector<double> similarities;
 
 	// Take the item with the smaller amount of users in its adjacent list
 	if(G[i].Adj.size() < G[j].Adj.size()){
@@ -38,52 +42,40 @@ double sim(Graph &G, string i, string j){
 		s1 = j; s2 = i;		
 	}
 
-	sum = sig1 = sig2 = k = 0;
-	for(map<string, int>::iterator u1 = G[s1].Adj.begin(), u2 = G[s2].Adj.begin(); u2 != G[s2].Adj.end(); u2++){
-		if(u1 != G[s1].Adj.end()){
-			sig1  += (u1->second * u1->second);
+	for(map<string, int>::iterator u1 = G[s1].Adj.begin(); u1 != G[s1].Adj.end(); u1++)
+		if(G[s2].Adj.find(u1->first) != G[s2].Adj.end())
+			similarities.push_back(u1->second * G[s2].Adj[u1->first]);
 
-			if(G[s2].Adj.find(u1->first) != G[s2].Adj.end()){
-				sum += (u1->second * u2->second);
-				k++;
-			}
+	sort(similarities.rbegin(), similarities.rend());
 
-			u1++;
-		}
+	sum = 0;
+	for(int k = 0; k < similarities.size() && k < NEIGHBORHOOD; k++)
+		sum += similarities[k];
 
-		sig2 += (u2->second * u2->second);
-	}
-
-	if(sig1 > 0 && sig2 > 0 && k >= MIN_NEIGHBORHOOD){
-		return sum/ (sqrt(sig1) * sqrt(sig2));
-	}else{
-		return 0.5;
-	}
+	return sum/(G[i].sig * G[j].sig);
 }
 
-void computeSimilarity(Graph &G, string user, string item, map<string, map<string, double> > &M){
+double predict(Graph &G, string user, string i, map<string, map<string, double> > &M){
+	double prediction, sum;
 
+	prediction = sum = 0;
 	for(map<string, int>::iterator j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
-		if(G.find(item) == G.end()){ // If true, the item has never been seen
-			M[item][j->first] = 0.5;
-			M[j->first][item] = 0.5;
-		}else if(M[item].find(j->first) == M[item].end()){ // If true, the similarity between 'item' and 'j' has not been calculated
-			M[item][j->first] = sim(G, item, j->first);
-			M[j->first][item] = M[item][j->first];
+		if(M.find(i) == M.end()){
+			M[i][j->first] = sim(G, i, j->first);
+			M[j->first][i] = M[i][j->first];
+		}else if(M[i].find(j->first) == M[i].end()){ // If true, the similarity between the itens i and j has never been calculated before
+			M[i][j->first] = sim(G, i, j->first);
+			M[j->first][i] = M[i][j->first];
 		}
+
+		prediction += M[i][j->first] * j->second;
+		sum += M[i][j->first];
 	}
-}
-
-double predict(Graph &G, string user, string item, map<string, map<string, double> > &M){
-	double prediction = 0;
-
-	for(map<string, int>::iterator r = G[user].Adj.begin(); r != G[user].Adj.end(); r++)
-		prediction += M[item][r->first] * r->second;
 
 	if(prediction == 0)
 		prediction = 5.0;
 	else
-		prediction /= G[user].Adj.size();
+		prediction /= sum;
 
 	return prediction;
 }
