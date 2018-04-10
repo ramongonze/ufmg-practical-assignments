@@ -30,12 +30,12 @@ int main(int argc, char *argv[]){
 			strcpy(user, strtok(buffer, ":"));
 			strcpy(item, strtok(NULL, "\n"));
 
-			if(G.find(item) == G.end()){
-				if(G.find(user) != G.end())
+			if(G.find(item) == G.end()){ // If true, the item is unknown
+				if(G.find(user) != G.end()) // If true, the user is known
 					prediction = G[user].mean;
 				else
 					prediction = 5.0;
-			}else if(G.find(user) == G.end())
+			}else if(G.find(user) == G.end()) // If true, the user is unknown
 				prediction = G[item].mean;
 			else{
 				prediction = predict(G, user, item, M);

@@ -23,8 +23,11 @@ Graph readData(char *train){
 	}
 
 	for(Graph::iterator i = G.begin(); i != G.end(); i++)
-		if((i->first)[0] == 'i')
+		if((i->first)[0] == 'i'){
 			G[i->first].sig = sqrt(G[i->first].sig);
+			if(G[i->first].sig == 0)
+				G[i->first].sig = 1;
+		}
 
 	fclose(input);
 	return G;
@@ -60,7 +63,7 @@ double predict(Graph &G, string user, string i, map<string, map<string, double> 
 
 	prediction = sum = 0;
 	for(map<string, int>::iterator j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
-		if(M.find(i) == M.end()){
+		if(M.find(i) == M.end()){ // If true, the similarity bertween the item i and any other item has never been calculated before
 			M[i][j->first] = sim(G, i, j->first);
 			M[j->first][i] = M[i][j->first];
 		}else if(M[i].find(j->first) == M[i].end()){ // If true, the similarity between the itens i and j has never been calculated before
@@ -68,7 +71,7 @@ double predict(Graph &G, string user, string i, map<string, map<string, double> 
 			M[j->first][i] = M[i][j->first];
 		}
 
-		prediction += M[i][j->first] * j->second;
+		prediction += (M[i][j->first] * j->second);
 		sum += M[i][j->first];
 	}
 
