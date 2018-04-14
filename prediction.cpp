@@ -43,7 +43,6 @@ Graph readData(char *train){
 double sim(Graph &G, string i, string j){
 	double sum, s;
 	string s1,s2;
-	vector<double> similarities;
 
 	// Take the item with the smaller amount of users in its adjacent list
 	if(G[i].Adj.size() < G[j].Adj.size()){
@@ -63,7 +62,7 @@ double sim(Graph &G, string i, string j){
 }
 
 double predict(Graph &G, string user, string i, SimMatrix &M){
-	vector<pair<double, int> > S;
+	vector<pair<double, pair<int, string> > > S;
 	double prediction, sum, norm;
 
 	for(AdjListi j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
@@ -75,21 +74,21 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 			M[j->first][i] = M[i][j->first];
 		}
 
-		S.push_back(make_pair(M[i][j->first], G[user].Adj[j->first]));
+		S.push_back(make_pair(M[i][j->first], make_pair(G[user].Adj[j->first], j->first)));
 	}
 
 	sort(S.rbegin(), S.rend());
 
 	sum = norm = 0;
-	for(int i = 0; i < S.size() && i < NEIGHBORHOOD; i++){
-		sum += S[i].first * S[i].second;
-		norm += S[i].first;
+	for(int j = 0; j < S.size() && j < NEIGHBORHOOD; j++){
+		sum += S[j].first * (S[j].second.first - G[S[j].second.second].mean);
+		norm += S[j].first;
 	}
 
 	if(norm == 0)
 		prediction = 5.0;
 	else
-		prediction = sum/norm;
+		prediction = G[i].mean + (sum/norm);
 
 	return prediction;
 }
