@@ -53,19 +53,13 @@ double sim(Graph &G, string i, string j){
 		s1 = j; s2 = i;		
 	}
 
-	c = 0;
+	c = 0; sum = 0;
 	for(AdjListi u1 = G[s1].Adj.begin(); u1 != G[s1].Adj.end(); u1++){
 		if(G[s2].Adj.find(u1->first) != G[s2].Adj.end()){
-			similarities.push_back(u1->second * G[s2].Adj[u1->first]);
+			sum += u1->second * G[s2].Adj[u1->first];
 			c++;
 		}
 	}
-
-	sort(similarities.rbegin(), similarities.rend());
-
-	sum = 0;
-	for(unsigned int k = 0; k < similarities.size() && k < NEIGHBORHOOD; k++)
-		sum += similarities[k];
 
 	s = (min(c, CONFIDENCE)/CONFIDENCE) * (sum/(G[i].sig * G[j].sig));
 
@@ -73,9 +67,9 @@ double sim(Graph &G, string i, string j){
 }
 
 double predict(Graph &G, string user, string i, SimMatrix &M){
-	double prediction, sum;
+	vector<pair<double, int> > S;
+	double prediction, sum, norm;
 
-	prediction = sum = 0;
 	for(AdjListi j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
 		if(M.find(i) == M.end()){ // If true, the similarity bertween the item i and any other item has never been calculated before
 			M[i][j->first] = sim(G, i, j->first);
@@ -85,14 +79,21 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 			M[j->first][i] = M[i][j->first];
 		}
 
-		prediction += (M[i][j->first] * j->second);
-		sum += M[i][j->first];
+		S.push_back(make_pair(M[i][j->first], G[user].Adj[j->first]));
 	}
 
-	if(sum == 0)
+	sort(S.rbegin(), S.rend());
+
+	sum = norm = 0;
+	for(int i = 0; i < S.size() && i < NEIGHBORHOOD; i++){
+		sum += S[i].first * S[i].second;
+		norm += S[i].first;
+	}
+
+	if(norm == 0)
 		prediction = 5.0;
 	else
-		prediction /= sum;
+		prediction = sum/norm;
 
 	return prediction;
 }
