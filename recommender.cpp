@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstring>
-#include "functions.h"
+#include "prediction.h"
 
 #ifndef VERTEX
 #include "graph.h"
@@ -13,8 +13,12 @@ int main(int argc, char *argv[]){
 	double prediction;
 	FILE *target;
 	Graph G;
-	map<string, map<string, double> > M;
-	set<string> users, itens;
+	SimMatrix M;
+
+	if(argc != 3){
+		printf("Invalid number of arguments!\n");
+		return -1;
+	}
 
 	strcpy(train, argv[1]);
 	strcpy(test, argv[2]);
@@ -23,7 +27,11 @@ int main(int argc, char *argv[]){
 
 	// Store users, itens and the selects for predictions user->item
 	target = fopen(test, "r");
-	fscanf(target, "%s", buffer); // Ignores the header
+	if(!fscanf(target, "%s", buffer)){ // Ignores the header
+		printf("Error reading the file!\n");
+		return -1;
+	}
+
 	printf("UserId:ItemId,Prediction\n");
 	while(fscanf(target, "%s", buffer) != EOF){ // For each pair (user, item) in the target file
 		if(buffer[0] != '\n'){
@@ -40,12 +48,7 @@ int main(int argc, char *argv[]){
 			else{
 				prediction = predict(G, user, item, M);
 			}
-
-			if(prediction < 0)
-				prediction = 0;
-			else if(prediction > 10)
-				prediction = 10;
-
+			
 			printf("%s:%s,%lf\n", user, item, prediction);
 		}
 	}

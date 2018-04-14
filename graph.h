@@ -10,7 +10,10 @@ typedef struct Vertex{
 	double sig; // Sigma factor, used to calculate the similarity between 2 itens
 }Vertex;
 
-typedef map<string, Vertex> Graph;
+typedef map<string, Vertex> Graph; // Graph representation
+typedef Graph::iterator Gi; // Iterator in a graph
+typedef map<string, int> AdjList; // Rpresentation of an adjacent list of a vertex
+typedef AdjList::iterator AdjListi; // Iterator in an adjacent list
 
 // Add and edge = (u, v)
 void addEdge(Graph &G, string u, string v, int weight);
