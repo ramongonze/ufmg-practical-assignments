@@ -41,7 +41,6 @@ Graph readData(char *train){
 }
 
 double sim(Graph &G, string i, string j){
-	int c; // Number of users that have watched both i and j
 	double sum, s;
 	string s1,s2;
 	vector<double> similarities;
@@ -53,15 +52,12 @@ double sim(Graph &G, string i, string j){
 		s1 = j; s2 = i;		
 	}
 
-	c = 0; sum = 0;
-	for(AdjListi u1 = G[s1].Adj.begin(); u1 != G[s1].Adj.end(); u1++){
-		if(G[s2].Adj.find(u1->first) != G[s2].Adj.end()){
+	sum = 0;
+	for(AdjListi u1 = G[s1].Adj.begin(); u1 != G[s1].Adj.end(); u1++)
+		if(G[s2].Adj.find(u1->first) != G[s2].Adj.end())
 			sum += u1->second * G[s2].Adj[u1->first];
-			c++;
-		}
-	}
 
-	s = (min(c, CONFIDENCE)/CONFIDENCE) * (sum/(G[i].sig * G[j].sig));
+	s = sum/(G[i].sig * G[j].sig);
 
 	return s;
 }
