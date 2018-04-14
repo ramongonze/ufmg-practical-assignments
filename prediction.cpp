@@ -4,30 +4,37 @@ Graph readData(char *train){
 	FILE *input;
 	char buffer[MAX_STR_LENGTH], user[MAX_STR_LENGTH], item[MAX_STR_LENGTH];
 	int rating;
-	long long int timestamp;
 	Graph G;
 
 	input = fopen(train, "r");	
-	
-	fscanf(input, "%s", buffer); // Ignores the header
+	if(!fscanf(input, "%s", buffer)){ // Ignores the header
+		printf("Error reading the file!\n");
+		return G;
+	}
+
 	while(fscanf(input, "%s", buffer) != EOF){
 		if(buffer[0] != '\n'){
 			strcpy(user, strtok(buffer, ":"));
 			strcpy(item, strtok(NULL, ","));
 			rating = atoi(strtok(NULL, ","));
-			timestamp = atol(strtok(NULL, "\n"));
+			strtok(NULL, "\n");
 
 			addEdge(G, user, item, rating);
 			addEdge(G, item, user, rating);
 		}
 	}
 
-	for(Gi i = G.begin(); i != G.end(); i++)
+	for(Gi i = G.begin(); i != G.end(); i++){
+		G[i->first].mean /= G[i->first].Adj.size();
+
 		if((i->first)[0] == 'i'){
-			G[i->first].sig = sqrt(G[i->first].sig);
-			if(G[i->first].sig == 0)
+			if(G[i->first].sig > 0)
+				G[i->first].sig = sqrt(G[i->first].sig);
+			else
 				G[i->first].sig = 1;
+				
 		}
+	}
 
 	fclose(input);
 	return G;
@@ -53,12 +60,11 @@ double sim(Graph &G, string i, string j){
 			c++;
 		}
 	}
-		
 
 	sort(similarities.rbegin(), similarities.rend());
 
 	sum = 0;
-	for(int k = 0; k < similarities.size() && k < NEIGHBORHOOD; k++)
+	for(unsigned int k = 0; k < similarities.size() && k < NEIGHBORHOOD; k++)
 		sum += similarities[k];
 
 	s = (min(c, CONFIDENCE)/CONFIDENCE) * (sum/(G[i].sig * G[j].sig));
@@ -83,7 +89,7 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 		sum += M[i][j->first];
 	}
 
-	if(prediction == 0)
+	if(sum == 0)
 		prediction = 5.0;
 	else
 		prediction /= sum;

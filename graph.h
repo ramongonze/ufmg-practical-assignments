@@ -17,3 +17,6 @@ typedef AdjList::iterator AdjListi; // Iterator in an adjacent list
 
 // Add and edge = (u, v)
 void addEdge(Graph &G, string u, string v, int weight);
+
+// Flags to compile
+// -O4 -Wall -Wextra -Werror -std=c++11 -pedantic

@@ -48,12 +48,12 @@ int main(int argc, char *argv[]){
 			else{
 				prediction = predict(G, user, item, M);
 			}
-			
-			printf("%s:%s,%lf\n", user, item, prediction);
+
+			printf("%s:%s,%.30lf\n", user, item, prediction);
 		}
 	}
+	
 	fclose(target);
-
 
 	return 0;
 }

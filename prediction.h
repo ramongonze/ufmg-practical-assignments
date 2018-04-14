@@ -13,7 +13,7 @@
 #endif
 
 #define MAX_STR_LENGTH 200
-#define NEIGHBORHOOD 10 // Maximum number of neighbors to calculate the similarity between two itens
+#define NEIGHBORHOOD 30 // Maximum number of neighbors to calculate the similarity between two itens
 #define CONFIDENCE 50 // Weightness similarity between two itens
 
 typedef map<string, map<string, double> > SimMatrix; // Matrix of similarities
