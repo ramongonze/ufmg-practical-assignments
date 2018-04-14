@@ -86,7 +86,7 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 	}
 
 	if(norm == 0)
-		prediction = 5.0;
+		prediction = COLD_START;
 	else
 		prediction = G[i].mean + (sum/norm);
 

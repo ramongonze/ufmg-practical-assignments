@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
 				if(G.find(user) != G.end()) // If true, the user is known
 					prediction = G[user].mean;
 				else
-					prediction = 5.0;
+					prediction = COLD_START;
 			}else if(G.find(user) == G.end()) // If true, the user is unknown
 				prediction = G[item].mean;
 			else{
