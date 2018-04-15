@@ -44,7 +44,7 @@ double sim(Graph &G, string i, string j){
 	double sum, s;
 	string s1,s2;
 
-	// Take the item with the smaller amount of users in its adjacent list
+	// Take the movie with the smaller amount of users in its adjacent list
 	if(G[i].Adj.size() < G[j].Adj.size()){
 		s1 = i; s2 = j;
 	}else{
@@ -66,10 +66,10 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 	double prediction, sum, norm;
 
 	for(AdjListi j = G[user].Adj.begin(); j != G[user].Adj.end(); j++){
-		if(M.find(i) == M.end()){ // If true, the similarity bertween the item i and any other item has never been calculated before
+		if(M.find(i) == M.end()){ // If true, the similarity between movie 'i' and any other movie has never been calculated before
 			M[i][j->first] = sim(G, i, j->first);
 			M[j->first][i] = M[i][j->first];
-		}else if(M[i].find(j->first) == M[i].end()){ // If true, the similarity between the itens i and j has never been calculated before
+		}else if(M[i].find(j->first) == M[i].end()){ // If true, the similarity between movie 'i' and 'j' has never been calculated before
 			M[i][j->first] = sim(G, i, j->first);
 			M[j->first][i] = M[i][j->first];
 		}
@@ -81,6 +81,7 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 
 	sum = norm = 0;
 	for(unsigned int j = 0; j < S.size() && j < NEIGHBORHOOD; j++){
+		// Selection of the k-nearest neighbors
 		sum += S[j].first * (S[j].second.first - G[S[j].second.second].mean);
 		norm += S[j].first;
 	}

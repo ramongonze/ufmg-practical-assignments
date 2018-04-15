@@ -25,7 +25,6 @@ int main(int argc, char *argv[]){
 
 	G = readData(train);
 
-	// Store users, itens and the selects for predictions user->item
 	target = fopen(test, "r");
 	if(!fscanf(target, "%s", buffer)){ // Ignores the header
 		printf("Error reading the file!\n");
