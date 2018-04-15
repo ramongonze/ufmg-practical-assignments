@@ -80,7 +80,7 @@ double predict(Graph &G, string user, string i, SimMatrix &M){
 	sort(S.rbegin(), S.rend());
 
 	sum = norm = 0;
-	for(int j = 0; j < S.size() && j < NEIGHBORHOOD; j++){
+	for(unsigned int j = 0; j < S.size() && j < NEIGHBORHOOD; j++){
 		sum += S[j].first * (S[j].second.first - G[S[j].second.second].mean);
 		norm += S[j].first;
 	}
