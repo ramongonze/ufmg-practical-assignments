@@ -5,10 +5,10 @@
 using namespace std;
 
 int main(int argc, char *argv[]){
-	Movie M;
-	Ratings R;
-	Dictionary D;
-	User U;
+	MapDescription M; // Movies contents
+	MapDescription U; // Users contents
+	Dictionary D; // Dictionary for words and sets
+	Ratings R; // Ratings for Users X Movies
 	string buffer;
 	ifstream targets;
 
@@ -33,8 +33,9 @@ int main(int argc, char *argv[]){
 		getline(s, user, ':');
 		getline(s, movie);
 
-
-
+		double p;
+		p = predict(user, movie, R, M, &D, U);
+		cout << user << ":" << movie << ',' << p << endl;
 	}
 
 	targets.close();
