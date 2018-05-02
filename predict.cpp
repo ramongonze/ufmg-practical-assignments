@@ -1,7 +1,5 @@
 #include "predict.h"
 
-
-
 string fixWord(string w){
 	if(w[0] == ' ')
 		w = w.substr(1,w.size());
@@ -33,10 +31,21 @@ void getStopWords(set<string> &stopWords){
 	
 	for(int i = 0; i < 128; i++)
 		stopWords.insert(words[i]);
-
 }
 
-void readContent(Movie &movies, Dictionary *D, string c_name){
+void calculateTFIDF(Movie &M, Dictionary *D){
+	for(Movie::iterator m = M.begin(); m != M.end(); m++){
+		// For each movie
+		for(map<string, pair<int, double> >::iterator p = m->second.plot.begin(); p != m->second.plot.end(); p++){
+			// For each word of movie's m plot
+			p->second.second = p->second.first * log((double)M.size()/D->plotsWords[p->first]);
+			m->second.sigP += p->second.second * p->second.second; 
+		}
+		m->second.sigP = sqrt(m->second.sigP);
+	}
+}
+
+void readContent(Movie &M, Dictionary *D, string c_name){
 	string buffer, word;
 	ifstream content;
 	Document d;
@@ -60,7 +69,7 @@ void readContent(Movie &movies, Dictionary *D, string c_name){
 			Description des;
 			des.year = atoi(d["Year"].GetString());
 			des.imdbRating = atof(d["imdbRating"].GetString());
-			
+
 			// Awards
 			string aw = d["Awards"].GetString();
 			des.awards = 0;
@@ -78,20 +87,25 @@ void readContent(Movie &movies, Dictionary *D, string c_name){
 			}
 
 			// Genres
+			des.sigG = 0;
 			for(stringstream s(d["Genre"].GetString()); s >> word; ){
 				word = fixWord(word);
 				if(word != ""){
 					des.genres.insert(word);
 					D->genres.insert(word);
+					des.sigG += 1;
 				}
 			}
+			des.sigG = sqrt(des.sigG);
 
 			// Actors and Directors
+			des.sigAD = 0;
 			for(stringstream s(d["Actors"].GetString()); getline(s, word, ','); ){
 				word = fixWord(word);
 				if(word != ""){
 					des.actorsAndDirectors.insert(word);
 					D->actorsAndDirectors.insert(word);
+					des.sigAD += 1;
 				}
 			}
 
@@ -100,17 +114,22 @@ void readContent(Movie &movies, Dictionary *D, string c_name){
 				if(word != ""){
 					des.actorsAndDirectors.insert(word);
 					D->actorsAndDirectors.insert(word);
+					des.sigAD += 1;
 				}
 			}
+			des.sigAD = sqrt(des.sigAD);
 
 			// Countries
+			des.sigC = 0;
 			for(stringstream s(d["Country"].GetString()); getline(s, word, ','); ){
 				word = fixWord(word);
 				if(word != ""){
 					des.countries.insert(word);
 					D->countries.insert(word);
+					des.sigC += 1;
 				}
 			}
+			des.sigC = sqrt(des.sigC);
 
 			// Plot
 			for(stringstream s(d["Plot"].GetString()); s >> word; ){
@@ -119,26 +138,30 @@ void readContent(Movie &movies, Dictionary *D, string c_name){
 					if(des.plot.find(word) == des.plot.end()){
 						des.plot[word].first = 1;
 						des.plot[word].second = 0.0;
+						
+						if(D->plotsWords.find(word) == D->plotsWords.end()){
+							D->plotsWords[word] = 1;
+						}else{
+							D->plotsWords[word]++;
+						}
 					}else{
 						des.plot[word].first++;
 					}
 
-					if(D->plotsWords.find(word) == D->plotsWords.end()){
-						D->plotsWords[word] = 0;
-					}else{
-						D->plotsWords[word]++;
-					}
 				}
 			}
+			des.sigP = 0;
 
-			movies[id] = des;
+			M[id] = des;
 		}
 	}
 
 	content.close();
+
+	calculateTFIDF(M, D);
 }
 
-void readRatings(User &users, string r_name){
+void readRatings(Ratings &R, Movie &M, User &U, string r_name){
 	int r;
 	ifstream ratings;
 	string u, m, buffer;
@@ -156,9 +179,43 @@ void readRatings(User &users, string r_name){
 		getline(s, u, ':');
 		getline(s, m, ',');
 		s >> r;
-		users[u][m] = r;
+		R[u][m] = r;
+		U[u].G.insert(M[m].genres.begin(), M[m].genres.end());
+		U[u].AD.insert(M[m].actorsAndDirectors.begin(), M[m].actorsAndDirectors.end());
+		U[u].C.insert(M[m].countries.begin(), M[m].countries.end());
 	}
 
 	ratings.close();
 }
 
+double sim(string u, string m, User &U, Movie &M, char type){
+	double sum = 0;
+	switch(type){
+		case 'G': // Genres
+			if(U[u].G.size() < M[m].genres.size()){
+				for(set<string>::iterator g = U[u].G.begin(); g != U[u].G.end(); g++)
+					if(M[m].genres.find(*g) != M[m].genres.end())
+						sum++;					
+			}else{
+				for(set<string>::iterator g = M[m].genres.begin(); g != M[m].genres.end(); g++)
+					if(U[u].G.find(*g) != U[u].G.end())
+						sum++;
+			}
+
+			return sum;
+			break;
+		case 'A': // Actors and Directors
+
+			break;
+		case 'C': // Countries
+
+			break;
+		case 'P': // Plots
+
+			break;
+	}
+}
+
+void predict(string u, string m, Ratings &R, Movie &M, Dictionary *D, User &U){
+
+}
