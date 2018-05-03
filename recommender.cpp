@@ -20,6 +20,20 @@ int main(int argc, char *argv[]){
 	readContent(M, &D, argv[1]);
 	readRatings(R, M, U, argv[2]);
 
+/*
+	cout << "USER: ";
+	for(Setit m = U["u0026762"].G.begin(); m != U["u0026762"].G.end(); m++)
+		cout << *m << "  ";
+	cout << endl;
+
+	cout << "MOVIE: ";
+	for(Setit m = M["i2171847"].G.begin(); m != M["i2171847"].G.end(); m++)
+		cout << *m << "  ";
+	cout << endl;
+
+	cout << "SIM: " << sim("u0026762", "i2171847", U, M, 'G') << endl;
+*/
+
 	targets.open(argv[3]);
 
 	getline(targets, buffer); // Ignores the header
@@ -27,6 +41,9 @@ int main(int argc, char *argv[]){
 	cout << "UserId:ItemId,Prediction" << endl;	
 	while(!targets.eof()){
 		getline(targets, buffer);
+		if(buffer.size() == 0 || buffer[0] == '\n')
+			break;
+
 		stringstream s(buffer);
 
 		string user, movie;
@@ -35,7 +52,8 @@ int main(int argc, char *argv[]){
 
 		double p;
 		p = predict(user, movie, R, M, &D, U);
-		cout << user << ":" << movie << ',' << p << endl;
+
+		cout << user << ":" << movie << ',' << setprecision(60) << p << endl;
 	}
 
 	targets.close();

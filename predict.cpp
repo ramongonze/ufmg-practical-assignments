@@ -202,13 +202,6 @@ void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
 		u->second.sigAD = sqrt(u->second.AD.size());
 		u->second.sigC = sqrt(u->second.C.size());
 
-		if(u->second.sigG == 0)
-			printf("GGG\n");
-		if(u->second.sigAD == 0)
-			printf("ADDD\n");
-		if(u->second.sigC == 0)
-			printf("CCCC\n");
-
 		// Calculates the average for year, imdbRating and awards
 		// for all movies the user u has watched before
 		u->second.year = (int)(u->second.year/R[u->first].size());
@@ -225,37 +218,37 @@ double sim(string u, string m, MapDescription &U, MapDescription &M, char type){
 				for(Setit g = U[u].G.begin(); g != U[u].G.end(); g++)
 					if(M[m].G.find(*g) != M[m].G.end())
 						sum++;
+				return sum/ U[u].G.size();
 			}else{
 				for(Setit g = M[m].G.begin(); g != M[m].G.end(); g++)
 					if(U[u].G.find(*g) != U[u].G.end())
 						sum++;
+				return sum/ M[m].G.size();
 			}
-
-			return sum/ (U[u].sigG * M[m].sigG);
 		case 'A': // Actors and Directors
 			if(U[u].AD.size() < M[m].AD.size()){
 				for(Setit ad = U[u].AD.begin(); ad != U[u].AD.end(); ad++)
 					if(M[m].AD.find(*ad) != M[m].AD.end())
 						sum++;
+				return sum/ U[u].AD.size();
 			}else{
 				for(Setit ad = M[m].AD.begin(); ad != M[m].AD.end(); ad++)
 					if(U[u].AD.find(*ad) != U[u].AD.end())
 						sum++;
+				return sum/ M[m].AD.size();	
 			}
-
-			return sum/ (U[u].sigAD * M[m].sigAD);
 		case 'C': // Countries
 			if(U[u].C.size() < M[m].C.size()){
 				for(Setit c = U[u].C.begin(); c != U[u].C.end(); c++)
 					if(M[m].C.find(*c) != M[m].C.end())
 						sum++;
+				return sum/ U[u].C.size();
 			}else{
 				for(Setit c = M[m].C.begin(); c != M[m].C.end(); c++)
 					if(U[u].C.find(*c) != U[u].C.end())
 						sum++;
+				return sum/ M[m].C.size();
 			}
-
-			return sum/ (U[u].sigC * M[m].sigC);
 		case 'P': // Plots
 			if(U[u].W.size() < M[m].W.size()){
 				for(map<string, pair<int, double> >::iterator w = U[u].W.begin(); w != U[u].W.end(); w++)
@@ -274,13 +267,13 @@ double sim(string u, string m, MapDescription &U, MapDescription &M, char type){
 double simYear(int y1, int y2){
 	// Each year of difference, the similarity decreases 5%
 	int dif = abs(y1-y2);
-	return min(0.0, (100.0 - (dif*5))/100);
+	return max(0.0, (100.0 - (dif*5))/100);
 }
 
 double simAwards(int a1, int a2){
 	// Each award of difference, the similarity decreases 2%
 	int dif = abs(a1 - a2);
-	return min(0.0, (100.0 - (dif*2)/100));
+	return max(0.0, (100.0 - (dif*2)/100));
 }
 
 double predict(string u, string m, Ratings &R, MapDescription &M, Dictionary *D, MapDescription &U){
@@ -289,34 +282,36 @@ double predict(string u, string m, Ratings &R, MapDescription &M, Dictionary *D,
 		// The user u has never watched a movie before. Returns the imdbRating of the movie m
 		return M[m].imdbRating;
 	}else{
-		if(U[u].words == false){
-			// It is necesseray to calculate the u's vector
-			U[u].sigP = 0;
-			for(map<string, pair<int, double> >::iterator w = U[u].W.begin(); w != U[u].W.end(); w++){
-				// For each word in user's u plots
-				double sum = 0;
-				string word = w->first;
-				for(map<string, int>::iterator m = R[u].begin(); m != R[u].end(); m++){
-					// For each movie watched by u
-					string movie = m->first;
-					int rate = m->second;
-					if(M[movie].W.find(word) != M[movie].W.end())
-						sum += rate * M[movie].W[word].second;
-				}				
+		// if(U[u].words == false){
+		// 	// It is necesseray to calculate the u's vector
+		// 	U[u].sigP = 0;
+		// 	for(map<string, pair<int, double> >::iterator w = U[u].W.begin(); w != U[u].W.end(); w++){
+		// 		// For each word in user's u plots
+		// 		double sum = 0;
+		// 		string word = w->first;
+		// 		for(map<string, int>::iterator m = R[u].begin(); m != R[u].end(); m++){
+		// 			// For each movie watched by u
+		// 			string movie = m->first;
+		// 			int rate = m->second;
+		// 			if(M[movie].W.find(word) != M[movie].W.end())
+		// 				sum += rate * M[movie].W[word].second;
+		// 		}				
 				
-				w->second.second = sum/ R[u].size();
-				U[u].sigP += w->second.second * w->second.second;
-			}
+		// 		w->second.second = sum/ R[u].size();
+		// 		U[u].sigP += w->second.second * w->second.second;
+		// 	}
 
-			U[u].sigP = sqrt(U[u].sigP);
-			U[u].words = true;
-		}
+		// 	U[u].sigP = sqrt(U[u].sigP);
+		// 	U[u].words = true;
+		// }
 
 		/*return ((sim(u, m, U, M, 'G') * GENRE + sim(u, m, U, M, 'A') * ACTOR_DIRECTORS
 		 + sim(u, m, U, M, 'C') * COUNTRIES + sim(u, m, U, M, 'P') * PLOT
 		 + simYear(U[u].year, M[m].year) * YEAR + simAwards(U[u].awards, M[m].awards) * AWARDS) 
 		 / (GENRE+ACTOR_DIRECTORS+COUNTRIES+PLOT+AWARDS+YEAR))*10;*/
 
-		return sim(u, m, U, M, 'G')*10;
+		return ((((sim(u, m, U, M, 'G') * GENRE + sim(u, m, U, M, 'A') * ACTOR_DIRECTORS
+		 + sim(u, m, U, M, 'C') * COUNTRIES + simYear(U[u].year, M[m].year) * YEAR)
+		  / (GENRE+ACTOR_DIRECTORS+COUNTRIES+YEAR)) * 10) + M[m].imdbRating)/2;
 	}
 }

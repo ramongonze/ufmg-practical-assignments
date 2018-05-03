@@ -8,17 +8,18 @@
 #include "rapidjson/document.h"
 
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 using namespace rapidjson;
 
 #define _PREDICT_
-#define GENRE 50
-#define ACTOR_DIRECTORS 5
+#define GENRE 70
+#define ACTOR_DIRECTORS 25
 #define COUNTRIES 5
-#define YEAR 5
-#define AWARDS 10
+#define YEAR 0
 #define PLOT 25
+#define AWARDS 10
 
 
 typedef set<string> Set; // Set of movies genres, actors, directors and so on
@@ -78,7 +79,6 @@ void calculateTFIDF(MapDescription &M, Dictionary *D);
 // Calculates the cosine between two vectors of genres (type == G), actors and director (type == A),
 // Countries (type == C) or Plots (type == P)
 double sim(string u, string m, MapDescription &U, MapDescription &M, char type);
-
 
 // Calculates the similarity between years
 // Each year of difference, the similarity decreases 5%
