@@ -7,7 +7,6 @@ using namespace std;
 int main(int argc, char *argv[]){
 	MapDescription M; // Movies contents
 	MapDescription U; // Users contents
-	Dictionary D; // Dictionary for words and sets
 	Ratings R; // Ratings for Users X Movies
 	string buffer;
 	ifstream targets;
@@ -17,22 +16,8 @@ int main(int argc, char *argv[]){
 		exit(-1);
 	}
 
-	readContent(M, &D, argv[1]);
+	readContent(M, argv[1]);
 	readRatings(R, M, U, argv[2]);
-
-/*
-	cout << "USER: ";
-	for(Setit m = U["u0026762"].G.begin(); m != U["u0026762"].G.end(); m++)
-		cout << *m << "  ";
-	cout << endl;
-
-	cout << "MOVIE: ";
-	for(Setit m = M["i2171847"].G.begin(); m != M["i2171847"].G.end(); m++)
-		cout << *m << "  ";
-	cout << endl;
-
-	cout << "SIM: " << sim("u0026762", "i2171847", U, M, 'G') << endl;
-*/
 
 	targets.open(argv[3]);
 
@@ -51,7 +36,8 @@ int main(int argc, char *argv[]){
 		getline(s, movie);
 
 		double p;
-		p = predict(user, movie, R, M, &D, U);
+		// Predict a rate from 'user' to 'movie'
+		p = predict(user, movie, R, M, U);
 
 		cout << user << ":" << movie << ',' << setprecision(60) << p << endl;
 	}
