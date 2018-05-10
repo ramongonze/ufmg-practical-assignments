@@ -1,10 +1,10 @@
 all: clean recommender
 
 recommender: predict.o
-	g++ -o recommender recommender.cpp predict.o -O2 -O3 -O4 -Wall -Wextra -Werror -std=c++11 -pedantic
+	g++ -o recommender recommender.cpp predict.o
 
 predict.o:
-	g++ -c predict.cpp -O2 -O3 -O4 -Wall -Wextra -Werror -std=c++11 -pedantic
+	g++ -c predict.cpp
 
 clean:
 	rm -f recommender

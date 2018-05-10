@@ -8,6 +8,7 @@ int main(int argc, char *argv[]){
 	MapDescription M; // Movies contents
 	MapDescription U; // Users contents
 	Ratings R; // Ratings for Users X Movies
+	Vectors V; // Ids of words, movies and users
 	string buffer;
 	ifstream targets;
 

@@ -14,15 +14,37 @@ string fixWord(string w){
 	return w;
 }
 
+void getStopWords(Set &stopWords){
+ 	string buffer;
+ 	ifstream SW;
+ 	
+ 	SW.open("stopWords");
+ 	getline(SW, buffer);
+ 	while(buffer.size() > 0){
+ 		stopWords.insert(buffer);
+ 		getline(SW, buffer);
+ 	}
+ 	SW.close();
+}
+
+
+int getUID(string u, Vectors V){
+	return 
+}
+int getMID(string m, Vectors V);
+int getWID(string w, Vectors V);
+
 void readContent(MapDescription &M, string file){
 	string buffer, word;
 	ifstream content;
 	Document d;
+	Set stopWords;
 
 	content.open(file.c_str());
 
 	getline(content, buffer); // Ignores the header
 
+	getStopWords(stopWords);
 	while(!content.eof()){
 		getline(content, buffer);
 		if(buffer.size() == 0 || buffer[0] == '\n'){
@@ -35,6 +57,20 @@ void readContent(MapDescription &M, string file){
 		if(!d.HasMember("Error")){
 			Description des;
 			des.imdbRating = atof(d["imdbRating"].GetString());
+
+			// Plots
+			for(stringstream s(d["Plot"].GetString()); s >> word; ){
+				word = fixWord(word);
+				if(stopWords.find(word) == stopWords.end()){
+					if(V.find(word) == V.end()){
+						V.Words.push_back(word);
+					}
+					if(des.P.find())
+					if(word != "")
+						des.G.insert(word);
+						
+				}
+			}
 
 			// Genres
 			for(stringstream s(d["Genre"].GetString()); s >> word; ){

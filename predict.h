@@ -21,6 +21,19 @@ using namespace rapidjson;
 typedef set<string> Set; // Set of movies genres, actors, directors and so on
 typedef set<string>::iterator Setit; // Set iterator
 
+// Map containing words ant its Term Frequency in the movie/user, that is, how many times
+// this words appears in the movie's/user's plot. OBS: Each word has an int id.
+typedef map<int, int> Words;
+typedef map<int, int>::iterator Wordsit;
+
+// Map containing each movie or user and its descriptions
+typedef map<string, Description> MapDescription;
+typedef map<string, Description>::iterator MapDescriptionit;
+
+// Matrix users x movies -> ratings
+typedef map<string, map<string, int> > Ratings;
+typedef map<string, map<string, int> >::iterator Ratingsit;
+
 // MapDescription and user description
 typedef struct Description{
 	float imdbRating; // Average rating, by public
@@ -30,15 +43,16 @@ typedef struct Description{
 	Set G; // Genres
 	Set ADW; // Actors, Directors and Writers
 	Set C; // Countries
+	Words P; // Plots. Maps one word to its TF
 }Description;
 
-// Map containing each movie or user and its descriptions
-typedef map<string, Description> MapDescription;
-typedef map<string, Description>::iterator MapDescriptionit;
-
-// Matrix users x movies -> ratings
-typedef map<string, map<string, int> > Ratings;
-typedef map<string, map<string, int> >::iterator Ratingsit;
+// Struct used to give ids for movies, users or words. The proposal is to build maps only
+// with integers, reducing the execution time.
+typedef struct Vectors{
+	vector<string> Movies;
+	vector<strings> Users;
+	vector<string> Words;
+}Vectors;
 
 // Put all letters in lowercase and remove all punctuations
 string fixWord(string w);
@@ -55,3 +69,19 @@ double sim(string u, string m, MapDescription &U, MapDescription &M, char type);
 
 // Predict the rate the movie m would receive from user u
 double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription &U);
+
+// Irrelevant words in english
+void getStopWords(Set &stopWords);
+
+// Get User ID
+int getUID(string u, Vectors V);
+
+// Get Movie ID
+int getMID(string m, Vectors V);
+
+// Get 
+int getWID(string w, Vectors V);
+
+
+
+
