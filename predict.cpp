@@ -27,24 +27,32 @@ void getStopWords(Set &stopWords){
  	SW.close();
 }
 
-
-int getUID(string u, Vectors V){
-	return 
+void calcTFiDF(MapDescription &M, map<int, int> &NI){
+	for(MapDescriptionit m = M.begin(); m != M.end(); m++){
+		m->second.sigP = 0;
+		for(Wordsit w = m->second.P.begin(); w != m->second.P.end(); w++){
+			w->second.TFiDF = w->second.TF * log((double)M.size()/NI[w->second.id]);
+			m->second.sigP += w->second.TFiDF*w->second.TFiDF;
+		}
+		m->second.sigP = sqrt(m->second.sigP);
+	}
 }
-int getMID(string m, Vectors V);
-int getWID(string w, Vectors V);
 
-void readContent(MapDescription &M, string file){
+void readContent(MapDescription &M, map<int, int> &NI, string file){
 	string buffer, word;
 	ifstream content;
 	Document d;
 	Set stopWords;
+	Word w;
+	int wCount;
+	map<string, int> Words;
 
 	content.open(file.c_str());
 
 	getline(content, buffer); // Ignores the header
 
 	getStopWords(stopWords);
+	wCount = 0;
 	while(!content.eof()){
 		getline(content, buffer);
 		if(buffer.size() == 0 || buffer[0] == '\n'){
@@ -61,14 +69,24 @@ void readContent(MapDescription &M, string file){
 			// Plots
 			for(stringstream s(d["Plot"].GetString()); s >> word; ){
 				word = fixWord(word);
-				if(stopWords.find(word) == stopWords.end()){
-					if(V.find(word) == V.end()){
-						V.Words.push_back(word);
+				if(stopWords.find(word) == stopWords.end() && word != ""){
+					if(Words.find(word) == Words.end())
+						Words[word] = ++wCount;
+
+					w.w = word;
+					w.id = Words[word];
+
+					if(des.P.find(w.id) == des.P.end()){
+						w.TF = 1;
+						des.P[w.id] = w;
+
+						if(NI.find(w.id) == NI.end())
+							NI[w.id] = 1;
+						else
+							NI[w.id] += 1;
+					}else{
+						des.P[w.id].TF += 1;
 					}
-					if(des.P.find())
-					if(word != "")
-						des.G.insert(word);
-						
 				}
 			}
 
@@ -112,10 +130,12 @@ void readContent(MapDescription &M, string file){
 		}
 	}
 
+	calcTFiDF(M, NI);
+
 	content.close();
 }
 
-void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
+void readRatings(Ratings &R, MapDescription &M, MapDescription &U, map<int, int> &NI, string file){
 	int r;
 	ifstream ratings;
 	string u, m, buffer;
@@ -139,10 +159,19 @@ void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
 			U[u].G.insert(M[m].G.begin(), M[m].G.end());
 			U[u].ADW.insert(M[m].ADW.begin(), M[m].ADW.end());
 			U[u].C.insert(M[m].C.begin(), M[m].C.end());
+			for(Wordsit w = M[m].P.begin(); w != M[m].P.end(); w++){
+				if(U[u].P.find(w->first) == U[u].P.end()){
+					U[u].P[w->first] = w->second;
+				}else{
+					U[u].P[w->first].TF += w->second.TF;
+				}
+			}
 		}
 	}
 
 	ratings.close();
+
+	calcTFiDF(U, NI);
 
 	for(MapDescriptionit u = U.begin(); u != U.end(); u++){
 		// Calculates the sigmas parameters for user u
@@ -191,6 +220,17 @@ double sim(string u, string m, MapDescription &U, MapDescription &M, char type){
 						sum++;
 				return sum/ M[m].C.size();
 			}
+		case 'P':
+			if(U[u].P.size() < M[m].P.size()){
+				for(Wordsit w = U[u].P.begin(); w != U[u].P.end(); w++)
+					if(M[m].P.find(w->first) != M[m].P.end())
+						sum += w->second.TFiDF * M[m].P[w->first].TFiDF;
+			}else{
+				for(Wordsit w = M[m].P.begin(); w != M[m].P.end(); w++)
+					if(U[u].P.find(w->first) != U[u].P.end())
+						sum += w->second.TFiDF * U[u].P[w->first].TFiDF;
+			}
+			return sum/ (U[u].sigP * M[m].sigP);
 	}
 
 	return -1;
@@ -202,7 +242,7 @@ double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription
 		// The user u has never watched a movie before. Returns the imdbRating of the movie m
 		return M[m].imdbRating;
 	}else{
-		double simG, simADW, simC;
+		double simG, simADW, simC, simP;
 		if(U[u].G.size() > 0)
 			simG = sim(u, m, U, M, 'G');
 		else simG = 0;
@@ -212,9 +252,12 @@ double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription
 		if(U[u].C.size() > 0)
 			simC = sim(u, m, U, M, 'C');
 		else simC = 0;
+		if(U[u].P.size() > 0)
+			simP = sim(u, m, U, M, 'P');
+		else simP = 0;
 
 		// A mean is calculated between the rate with similarities and the movie's imdbRating
-		return ((simG*W_G + simADW*W_ADW + simC*W_C) 
-			    /(W_G + W_ADW + W_C)*10 + M[m].imdbRating)/2;  
+		return ((simG*W_G + simADW*W_ADW + simC*W_C + simP*W_P) 
+			    /(W_G + W_ADW + W_C + W_P)*10 + M[m].imdbRating)/2;  
 	}
 }

@@ -17,14 +17,37 @@ using namespace rapidjson;
 #define W_G 50 // Weight for genres in predicting rate
 #define W_ADW 25 // Weight for actors, directors and writers in predicting rate
 #define W_C 25 // Weight for countries in predicting rate
+#define W_P 0 // Weight for plots in predicting rate
+
+// Words in movie's/user's plot
+typedef struct Word{
+	string w; // Word's string
+	int id; // Word's id
+	int TF; // Word's frequency in the movie's/user's plot
+	double TFiDF; // TF * log(n/ni), where n is the number of movies
+				  // and ni is the number of movies the where the word appears
+}Word;
 
 typedef set<string> Set; // Set of movies genres, actors, directors and so on
 typedef set<string>::iterator Setit; // Set iterator
 
 // Map containing words ant its Term Frequency in the movie/user, that is, how many times
 // this words appears in the movie's/user's plot. OBS: Each word has an int id.
-typedef map<int, int> Words;
-typedef map<int, int>::iterator Wordsit;
+typedef map<int, Word> Words;
+typedef map<int, Word>::iterator Wordsit;
+
+// MapDescription and user description
+typedef struct Description{
+	float imdbRating; // Average rating, by public
+	double sigG; // Sigma parameter to calculate cosine similarity for genres
+	double sigADW; // Sigma parameter to calculate cosine similarity for actors, directors and writers
+	double sigC; // Sigma parameter to calculate cosine similarity for countries
+	double sigP; // Sigma parameter to calculate cosine similarity for plots
+	Set G; // Genres
+	Set ADW; // Actors, Directors and Writers
+	Set C; // Countries
+	Words P; // Plots. Maps one word to its TF
+}Description;
 
 // Map containing each movie or user and its descriptions
 typedef map<string, Description> MapDescription;
@@ -34,34 +57,15 @@ typedef map<string, Description>::iterator MapDescriptionit;
 typedef map<string, map<string, int> > Ratings;
 typedef map<string, map<string, int> >::iterator Ratingsit;
 
-// MapDescription and user description
-typedef struct Description{
-	float imdbRating; // Average rating, by public
-	double sigG; // Sigma parameter to calculate cosine similarity for genres
-	double sigADW; // Sigma parameter to calculate cosine similarity for actors, directors and writers
-	double sigC; // Sigma parameter to calculate cosine similarity for countries
-	Set G; // Genres
-	Set ADW; // Actors, Directors and Writers
-	Set C; // Countries
-	Words P; // Plots. Maps one word to its TF
-}Description;
-
-// Struct used to give ids for movies, users or words. The proposal is to build maps only
-// with integers, reducing the execution time.
-typedef struct Vectors{
-	vector<string> Movies;
-	vector<strings> Users;
-	vector<string> Words;
-}Vectors;
 
 // Put all letters in lowercase and remove all punctuations
 string fixWord(string w);
 
 // Read the content file and returns a map, containing movies and their features
-void readContent(MapDescription &movies, string file);
+void readContent(MapDescription &M, map<int, int> &NI, string file);
 
 // Read the matrix Ratingss x MapDescriptions -> Ratings
-void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file);
+void readRatings(Ratings &R, MapDescription &M, MapDescription &U, map<int, int> &NI, string file);
 
 // Calculates the cosine between two vectors of genres (type == G), actors and director (type == A),
 // Countries (type == C) or Plots (type == P). Returns -1 if the parameter type is wrong
@@ -72,16 +76,3 @@ double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription
 
 // Irrelevant words in english
 void getStopWords(Set &stopWords);
-
-// Get User ID
-int getUID(string u, Vectors V);
-
-// Get Movie ID
-int getMID(string m, Vectors V);
-
-// Get 
-int getWID(string w, Vectors V);
-
-
-
-

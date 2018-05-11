@@ -8,17 +8,17 @@ int main(int argc, char *argv[]){
 	MapDescription M; // Movies contents
 	MapDescription U; // Users contents
 	Ratings R; // Ratings for Users X Movies
-	Vectors V; // Ids of words, movies and users
 	string buffer;
 	ifstream targets;
+	map<int, int> NI; // first: movie's id, second: # Movies the words appears
 
 	if(argc != 4){
 		printf("Invalid number of arguments!!\n");
 		exit(-1);
 	}
 
-	readContent(M, argv[1]);
-	readRatings(R, M, U, argv[2]);
+	readContent(M, NI, argv[1]);
+	readRatings(R, M, U, NI, argv[2]);
 
 	targets.open(argv[3]);
 
