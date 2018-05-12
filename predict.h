@@ -16,8 +16,8 @@ using namespace rapidjson;
 #define _PREDICT_
 #define W_G 50 // Weight for genres in predicting rate
 #define W_ADW 25 // Weight for actors, directors and writers in predicting rate
-#define W_C 25 // Weight for countries in predicting rate
-#define W_P 0 // Weight for plots in predicting rate
+#define W_C 15 // Weight for countries in predicting rate
+#define W_P 10 // Weight for plots in predicting rate
 
 // Words in movie's/user's plot
 typedef struct Word{
@@ -62,14 +62,14 @@ typedef map<string, map<string, int> >::iterator Ratingsit;
 string fixWord(string w);
 
 // Read the content file and returns a map, containing movies and their features
-void readContent(MapDescription &M, map<int, int> &NI, string file);
+void readContent(MapDescription &M, map<int, int> &NI, map<string, int> &Words, string file);
 
 // Read the matrix Ratingss x MapDescriptions -> Ratings
-void readRatings(Ratings &R, MapDescription &M, MapDescription &U, map<int, int> &NI, string file);
+void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file);
 
 // Calculates the cosine between two vectors of genres (type == G), actors and director (type == A),
 // Countries (type == C) or Plots (type == P). Returns -1 if the parameter type is wrong
-double sim(string u, string m, MapDescription &U, MapDescription &M, char type);
+double sim(string u, string m, MapDescription &U, MapDescription &M, int n_words, char type);
 
 // Predict the rate the movie m would receive from user u
 double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription &U);

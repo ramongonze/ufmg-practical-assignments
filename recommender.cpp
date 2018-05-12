@@ -11,14 +11,15 @@ int main(int argc, char *argv[]){
 	string buffer;
 	ifstream targets;
 	map<int, int> NI; // first: movie's id, second: # Movies the words appears
+	map<string, int> Words;
 
 	if(argc != 4){
 		printf("Invalid number of arguments!!\n");
 		exit(-1);
 	}
 
-	readContent(M, NI, argv[1]);
-	readRatings(R, M, U, NI, argv[2]);
+	readContent(M, NI, Words, argv[1]);
+	readRatings(R, M, U, (int)Words.size(), argv[2]);
 
 	targets.open(argv[3]);
 

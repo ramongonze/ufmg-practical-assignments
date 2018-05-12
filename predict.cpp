@@ -1,4 +1,4 @@
-#include "predict.h"
+	#include "predict.h"
 
 string fixWord(string w){
 	if(w[0] == ' ')
@@ -38,14 +38,13 @@ void calcTFiDF(MapDescription &M, map<int, int> &NI){
 	}
 }
 
-void readContent(MapDescription &M, map<int, int> &NI, string file){
+void readContent(MapDescription &M, map<int, int> &NI, map<string, int> &Words, string file){
 	string buffer, word;
 	ifstream content;
 	Document d;
 	Set stopWords;
 	Word w;
 	int wCount;
-	map<string, int> Words;
 
 	content.open(file.c_str());
 
@@ -135,7 +134,7 @@ void readContent(MapDescription &M, map<int, int> &NI, string file){
 	content.close();
 }
 
-void readRatings(Ratings &R, MapDescription &M, MapDescription &U, map<int, int> &NI, string file){
+void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
 	int r;
 	ifstream ratings;
 	string u, m, buffer;
@@ -159,19 +158,25 @@ void readRatings(Ratings &R, MapDescription &M, MapDescription &U, map<int, int>
 			U[u].G.insert(M[m].G.begin(), M[m].G.end());
 			U[u].ADW.insert(M[m].ADW.begin(), M[m].ADW.end());
 			U[u].C.insert(M[m].C.begin(), M[m].C.end());
-			for(Wordsit w = M[m].P.begin(); w != M[m].P.end(); w++){
-				if(U[u].P.find(w->first) == U[u].P.end()){
-					U[u].P[w->first] = w->second;
-				}else{
-					U[u].P[w->first].TF += w->second.TF;
-				}
+		}
+		
+		// Plot
+		for(Wordsit w = M[m].P.begin(); w != M[m].P.end(); w++){
+			if(U[u].P.find(w->first) == U[u].P.end()){
+				U[u].P[w->first].TFiDF = r * w->second.TFiDF;
+			}else{
+				U[u].P[w->first].TFiDF += r * w->second.TFiDF;
 			}
 		}
 	}
 
 	ratings.close();
 
-	calcTFiDF(U, NI);
+	for(MapDescriptionit u = U.begin(); u != U.end(); u++){
+		for(Wordsit w = U[u->first].P.begin(); w != U[u->first].P.end(); w++){
+			w->second.TFiDF /= R[u->first].size();
+		}
+	}
 
 	for(MapDescriptionit u = U.begin(); u != U.end(); u++){
 		// Calculates the sigmas parameters for user u
@@ -181,9 +186,10 @@ void readRatings(Ratings &R, MapDescription &M, MapDescription &U, map<int, int>
 	}
 }
 
-double sim(string u, string m, MapDescription &U, MapDescription &M, char type){
+double sim(string u, string m, MapDescription &U, MapDescription &M, int n_words, char type){
 	double sum = 0;
 	switch(type){
+		// Cosine similarity
 		case 'G': // Genres
 			if(U[u].G.size() < M[m].G.size()){
 				for(Setit g = U[u].G.begin(); g != U[u].G.end(); g++)
@@ -221,16 +227,30 @@ double sim(string u, string m, MapDescription &U, MapDescription &M, char type){
 				return sum/ M[m].C.size();
 			}
 		case 'P':
+			// Euclidian distance between two vectors
 			if(U[u].P.size() < M[m].P.size()){
-				for(Wordsit w = U[u].P.begin(); w != U[u].P.end(); w++)
-					if(M[m].P.find(w->first) != M[m].P.end())
-						sum += w->second.TFiDF * M[m].P[w->first].TFiDF;
+				for(Wordsit w = U[u].P.begin(); w != U[u].P.end(); w++){
+					if(M[m].P.find(w->first) != M[m].P.end()){
+						sum += ((w->second.TFiDF-M[m].P[w->first].TFiDF)*
+							   (w->second.TFiDF-M[m].P[w->first].TFiDF))/
+							   n_words;
+					}else{
+						sum += (w->second.TFiDF*w->second.TFiDF)/n_words;
+					}
+						
+				}
 			}else{
-				for(Wordsit w = M[m].P.begin(); w != M[m].P.end(); w++)
-					if(U[u].P.find(w->first) != U[u].P.end())
-						sum += w->second.TFiDF * U[u].P[w->first].TFiDF;
+				for(Wordsit w = M[m].P.begin(); w != M[m].P.end(); w++){
+					if(U[u].P.find(w->first) != U[u].P.end()){
+						sum += ((w->second.TFiDF-U[u].P[w->first].TFiDF)*
+							   (w->second.TFiDF-U[u].P[w->first].TFiDF))/
+							   n_words;
+					}else{
+						sum += (w->second.TFiDF*w->second.TFiDF)/n_words;
+					}
+				}
 			}
-			return sum/ (U[u].sigP * M[m].sigP);
+			return sqrt(sum);
 	}
 
 	return -1;
