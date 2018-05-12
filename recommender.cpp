@@ -10,16 +10,16 @@ int main(int argc, char *argv[]){
 	Ratings R; // Ratings for Users X Movies
 	string buffer;
 	ifstream targets;
-	map<int, int> NI; // first: movie's id, second: # Movies the words appears
-	map<string, int> Words;
+	Mii NI; // First: word's id; Second: number of movies where the words appears
+	int n_words; // First: word; Second: word's id
 
 	if(argc != 4){
 		printf("Invalid number of arguments!!\n");
 		exit(-1);
 	}
 
-	readContent(M, NI, Words, argv[1]);
-	readRatings(R, M, U, (int)Words.size(), argv[2]);
+	n_words = readContent(M, NI, argv[1]);
+	readRatings(R, M, U, argv[2]);
 
 	targets.open(argv[3]);
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
 
 		double p;
 		// Predict a rate from 'user' to 'movie'
-		p = predict(user, movie, R, M, U);
+		p = predict(user, movie, R, M, U, n_words);
 
 		cout << user << ":" << movie << ',' << setprecision(60) << p << endl;
 	}

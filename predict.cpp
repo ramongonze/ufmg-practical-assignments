@@ -1,4 +1,4 @@
-	#include "predict.h"
+#include "predict.h"
 
 string fixWord(string w){
 	if(w[0] == ' ')
@@ -27,24 +27,22 @@ void getStopWords(Set &stopWords){
  	SW.close();
 }
 
-void calcTFiDF(MapDescription &M, map<int, int> &NI){
+void calcTFiDF(MapDescription &M, Mii &NI){
 	for(MapDescriptionit m = M.begin(); m != M.end(); m++){
-		m->second.sigP = 0;
 		for(Wordsit w = m->second.P.begin(); w != m->second.P.end(); w++){
 			w->second.TFiDF = w->second.TF * log((double)M.size()/NI[w->second.id]);
-			m->second.sigP += w->second.TFiDF*w->second.TFiDF;
 		}
-		m->second.sigP = sqrt(m->second.sigP);
 	}
 }
 
-void readContent(MapDescription &M, map<int, int> &NI, map<string, int> &Words, string file){
+int readContent(MapDescription &M, Mii &NI, string file){
 	string buffer, word;
 	ifstream content;
 	Document d;
 	Set stopWords;
 	Word w;
-	int wCount;
+	Msi Words; // First: word; Second: word's id (integer)
+	int wCount; // Total number of words found in all movie's plots
 
 	content.open(file.c_str());
 
@@ -92,36 +90,31 @@ void readContent(MapDescription &M, map<int, int> &NI, map<string, int> &Words, 
 			// Genres
 			for(stringstream s(d["Genre"].GetString()); s >> word; ){
 				word = fixWord(word);
-				if(word != "")
-					des.G.insert(word);
+				if(word != "") des.G.insert(word);
 			}
 			des.sigG = sqrt(des.G.size());
 
 			// Actors, Directors and Writers
 			for(stringstream s(d["Actors"].GetString()); getline(s, word, ','); ){
 				word = fixWord(word);
-				if(word != "")
-					des.ADW.insert(word);
+				if(word != "") des.ADW.insert(word);
 			}
 
 			for(stringstream s(d["Director"].GetString()); getline(s, word, ','); ){
 				word = fixWord(word);
-				if(word != "")
-					des.ADW.insert(word);
+				if(word != "") des.ADW.insert(word);
 			}
 
 			for(stringstream s(d["Writer"].GetString()); getline(s, word, ','); ){
 				word = fixWord(word);
-				if(word != "")
-					des.ADW.insert(word);
+				if(word != "") des.ADW.insert(word);
 			}
 			des.sigADW = sqrt(des.ADW.size());
 
 			// Countries
 			for(stringstream s(d["Country"].GetString()); getline(s, word, ','); ){
 				word = fixWord(word);
-				if(word != "")
-					des.C.insert(word);
+				if(word != "") des.C.insert(word);
 			}
 			des.sigC = sqrt(des.C.size());
 
@@ -132,6 +125,8 @@ void readContent(MapDescription &M, map<int, int> &NI, map<string, int> &Words, 
 	calcTFiDF(M, NI);
 
 	content.close();
+
+	return wCount;
 }
 
 void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
@@ -155,8 +150,11 @@ void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
 		
 		R[u][m] = r;
 		if(r > 4){
+			// Genres
 			U[u].G.insert(M[m].G.begin(), M[m].G.end());
+			// Actors, directors and writers
 			U[u].ADW.insert(M[m].ADW.begin(), M[m].ADW.end());
+			// Countries
 			U[u].C.insert(M[m].C.begin(), M[m].C.end());
 		}
 		
@@ -172,6 +170,7 @@ void readRatings(Ratings &R, MapDescription &M, MapDescription &U, string file){
 
 	ratings.close();
 
+	// Calculates the TFiDF for user's vector, according to Rocchio recommendation
 	for(MapDescriptionit u = U.begin(); u != U.end(); u++){
 		for(Wordsit w = U[u->first].P.begin(); w != U[u->first].P.end(); w++){
 			w->second.TFiDF /= R[u->first].size();
@@ -256,7 +255,7 @@ double sim(string u, string m, MapDescription &U, MapDescription &M, int n_words
 	return -1;
 }
 
-double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription &U){
+double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription &U, int n_words){
 
 	if(R.find(u) == R.end()){
 		// The user u has never watched a movie before. Returns the imdbRating of the movie m
@@ -264,20 +263,20 @@ double predict(string u, string m, Ratings &R, MapDescription &M, MapDescription
 	}else{
 		double simG, simADW, simC, simP;
 		if(U[u].G.size() > 0)
-			simG = sim(u, m, U, M, 'G');
+			simG = sim(u, m, U, M, 0, 'G');
 		else simG = 0;
 		if(U[u].ADW.size() > 0)
-			simADW = sim(u, m, U, M, 'A');
+			simADW = sim(u, m, U, M, 0, 'A');
 		else simADW = 0;
 		if(U[u].C.size() > 0)
-			simC = sim(u, m, U, M, 'C');
+			simC = sim(u, m, U, M, 0, 'C');
 		else simC = 0;
 		if(U[u].P.size() > 0)
-			simP = sim(u, m, U, M, 'P');
+			simP = sim(u, m, U, M, n_words, 'P');
 		else simP = 0;
 
 		// A mean is calculated between the rate with similarities and the movie's imdbRating
 		return ((simG*W_G + simADW*W_ADW + simC*W_C + simP*W_P) 
-			    /(W_G + W_ADW + W_C + W_P)*10 + M[m].imdbRating)/2;  
+			    /(W_G + W_ADW + W_C + W_P)*10)*0.2 + M[m].imdbRating*0.8;  
 	}
 }
