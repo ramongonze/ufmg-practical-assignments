@@ -1,4 +1,5 @@
 #include <set>
+#include <string>
 #include <map>
 
 #define _GRAPH_
@@ -7,9 +8,11 @@ using namespace std;
 
 typedef set<int> Si;
 typedef set<int>::iterator SiIt;
+typedef set<string> Ss;
+typedef set<string>::iterator SsIt;
 
 typedef map<int, int> AdjList; // Representation of an adjacent list of a vertex
-typedef AdjList::iterator AdjListIt; // Iterator of an adjacent list
+typedef map<int, int>::iterator AdjListIt; // Iterator of an adjacent list
 
 typedef struct Vertex{
 	/*
@@ -30,8 +33,8 @@ typedef struct Vertex{
 	int id;
 	double sig; // Sigma factor, used to calculate the similarity between 2 books
 	double av_rating; // Average rating given to a book or average rating given to all books that the user has read.
-	Si authors; // Authors of a book or authors of all books that the user has read.
-	Si language; // Language that the book was written or languages of all books that the user has read.
+	Ss authors; // Authors of a book or authors of all books that the user has read.
+	Ss tags; // Tags which describe the book or tags of all books that the user has read.
 	AdjList neighboors;
 }Vertex;
 
