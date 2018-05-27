@@ -1,15 +1,16 @@
+#ifndef _GRAPH_
 #include "graph.h"
+#endif
 
-#define VERTEX 1
-
-void addEdge(Graph &G, string u, string v, int weight){
-	if(G.find(u) == G.end()){ // If true, the vertex u is not in the graph
-		G[u].Adj[v] = weight;
-		G[u].mean = weight;
+void addEdge(Graph &G, int u, int v, int weight){
+	if(G.find(u) == G.end()){
+		// The vertex u is not in the graph
+		G[u].neighboors[v] = weight;
+		G[u].av_rating = weight;
 		G[u].sig = (weight * weight);
 	}else{
-		G[u].Adj[v] = weight;
-		G[u].mean += weight;
+		G[u].neighboors[v] = weight;
+		G[u].av_rating += weight;
 		G[u].sig += (weight * weight);
 	}
 }

@@ -1,19 +1,42 @@
-#include <iostream>
-#include <string>
+#include <set>
 #include <map>
+
+#define _GRAPH_
 
 using namespace std;
 
+typedef set<int> Si;
+typedef set<int>::iterator SiIt;
+
+typedef map<int, int> AdjList; // Representation of an adjacent list of a vertex
+typedef AdjList::iterator AdjListIt; // Iterator of an adjacent list
+
 typedef struct Vertex{
-	map<string, int> Adj; // The key is the vertex's name, and the value is the edge's weight
-	double mean; // Mean ratings for all User X Movie (Movie X User)
-	double sig; // Sigma factor, used to calculate the similarity between 2 movies
+	/*
+		- A vertex represents an user or a book. The graph of users and books is bipartite,
+		  where the set V of vertexes can be divided in two disjoint sets:
+			U: Set of users
+			B: Set of books
+		
+		- The edges between users and books represent the rate given by an user to a book.
+		  The rates can be 1, 2, 3, 4 or 5.
+		
+		- The id for a book is an integer, from 1 to #books.
+		- The id for an user is also an integer, from #books+1 to #users.
+
+		- Each user/book has an adjacent list (neighboors), that is, which books were read
+		  (when the vertex is an user) or which users read it (when the vertex is a book).
+	*/
+	int id;
+	double sig; // Sigma factor, used to calculate the similarity between 2 books
+	double av_rating; // Average rating given to a book or average rating given to all books that the user has read.
+	Si authors; // Authors of a book or authors of all books that the user has read.
+	Si language; // Language that the book was written or languages of all books that the user has read.
+	AdjList neighboors;
 }Vertex;
 
-typedef map<string, Vertex> Graph; // Graph representation
-typedef Graph::iterator Gi; // Iterator of a graph
-typedef map<string, int> AdjList; // Representation of an adjacent list of a vertex
-typedef AdjList::iterator AdjListi; // Iterator of an adjacent list
+typedef map<int, Vertex> Graph; // Graph representation
+typedef Graph::iterator GraphIt; // Iterator of a graph
 
 // Add and edge = (u, v)
-void addEdge(Graph &G, string u, string v, int weight);
+void addEdge(Graph &G, int u, int v, int weight);
