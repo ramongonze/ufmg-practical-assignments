@@ -14,27 +14,6 @@ string fixWord(string w){
 	return w;
 }
 
-void getStopWords(Set &stopWords){
- 	string buffer;
- 	ifstream SW;
- 	
- 	SW.open("stopWords");
- 	getline(SW, buffer);
- 	while(buffer.size() > 0){
- 		stopWords.insert(buffer);
- 		getline(SW, buffer);
- 	}
- 	SW.close();
-}
-
-void calcTFiDF(MapDescription &M, Mii &NI){
-	for(MapDescriptionit m = M.begin(); m != M.end(); m++){
-		for(Wordsit w = m->second.P.begin(); w != m->second.P.end(); w++){
-			w->second.TFiDF = w->second.TF * log((double)M.size()/NI[w->second.id]);
-		}
-	}
-}
-
 int readContent(MapDescription &M, Mii &NI, string file){
 	string buffer, word;
 	ifstream content;

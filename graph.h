@@ -11,8 +11,8 @@ typedef set<int>::iterator SiIt;
 typedef set<string> Ss;
 typedef set<string>::iterator SsIt;
 
-typedef map<int, int> AdjList; // Representation of an adjacent list of a vertex
-typedef map<int, int>::iterator AdjListIt; // Iterator of an adjacent list
+typedef map<int, int> AdjList; // Representation of an adjacent list of a vertex. Key: vertex id. Value: rating.
+typedef map<int, int>::iterator AdjListIt; // Iterator of an adjacent list.
 
 typedef struct Vertex{
 	/*
@@ -26,20 +26,22 @@ typedef struct Vertex{
 		
 		- The id for a book is an integer, from 1 to #books.
 		- The id for an user is also an integer, from #books+1 to #users.
+		  For example: User with id=2 will have his id equals to #books+2
 
 		- Each user/book has an adjacent list (neighboors), that is, which books were read
 		  (when the vertex is an user) or which users read it (when the vertex is a book).
 	*/
 	int id;
 	double sig; // Sigma factor, used to calculate the similarity between 2 books
-	double av_rating; // Average rating given to a book or average rating given to all books that the user has read.
+	float av_rating; // Average rating given to a book or average rating given to all books that the user has read.
 	Ss authors; // Authors of a book or authors of all books that the user has read.
-	Ss tags; // Tags which describe the book or tags of all books that the user has read.
+	Si tags; // Tags which describe the book or tags of all books that the user has read.
 	AdjList neighboors;
+
 }Vertex;
 
-typedef map<int, Vertex> Graph; // Graph representation
-typedef Graph::iterator GraphIt; // Iterator of a graph
+typedef map<int, Vertex> Graph; // Graph representation. Key: user/book id. Value: user/book description
+typedef map<int, Vertex>::iterator GraphIt; // Iterator of a graph
 
 // Add and edge = (u, v)
 void addEdge(Graph &G, int u, int v, int weight);

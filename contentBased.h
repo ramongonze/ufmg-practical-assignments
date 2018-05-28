@@ -19,25 +19,6 @@ using namespace rapidjson;
 #define W_C 25 // Weight for countries in predicting rate
 #define W_P 0 // Weight for plots in predicting rate
 
-// Words in movie's/user's plot
-typedef struct Word{
-	string w; // Word's string
-	int id; // Word's id
-	int TF; // Word's frequency in the movie's/user's plot
-	double TFiDF; // TF * log(n/ni), where n is the number of movies
-				  // and ni is the number of movies where the word appears
-}Word;
-
-typedef set<string> Set; // Set of movies genres, actors, directors and so on
-typedef set<string>::iterator Setit; // Set iterator
-
-typedef map<int, int> Mii;
-typedef map<string, int> Msi;
-
-// Maps one word's id to its name, TF, id and TFiDF
-typedef map<int, Word> Words;
-typedef map<int, Word>::iterator Wordsit;
-
 // MapDescription and user description
 typedef struct Description{
 	float imdbRating; // Average rating, by public
@@ -57,15 +38,6 @@ typedef map<string, Description>::iterator MapDescriptionit;
 // Matrix users x movies -> ratings
 typedef map<string, Msi > Ratings;
 typedef map<string, Msi >::iterator Ratingsit;
-
-// Put all letters in lowercase and remove all punctuations from a given word
-string fixWord(string w);
-
-// Build a set with irrelevant words in english
-void getStopWords(Set &stopWords);
-
-// Calculates the TF-iDF value for a word in a movie's plot
-void calcTFiDF(MapDescription &M, Mii &NI);
 
 // Read the content file and returns a map, containing movies and their features,
 // an integer n = number of distinct words found in all movie's plots and a map
