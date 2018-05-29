@@ -10,9 +10,9 @@
 
 #define _DATA_
 /* ------------- Dataset ------------ */
-#define RATINGS "dataset/ratings.csv" 
-#define CONTENT "dataset/books.csv"
-#define BOOK_TAGS "dataset/book_tags.csv"
+#define RATINGS "DataSet/ratings.csv" 
+#define CONTENT "DataSet/books.csv"
+#define BOOK_TAGS "DataSet/book_tags.csv"
 /* ---------------------------------- */
 
 using namespace std;
@@ -25,7 +25,7 @@ Vs split(const string& s, char delimiter);
 // Put all letters in lowercase and remove all punctuations from a given string.
 string fixString(string s);
 
-// Read tags for all books, and insert them into a set of tags of a book. 
+// Read tags for all books, and insert them into a set of tags of a book.
 Graph readBookTags();
 
 /*
@@ -33,7 +33,7 @@ Graph readBookTags();
 		-> Authors
 		-> Tags
 		-> Average rate
-	
+
 	- The function also returns the total number of books in the variable
 	  start. It is used to build the graph, modifiyng users' ids.
 	  (View description on graph.h).

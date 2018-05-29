@@ -19,7 +19,7 @@ Vs split(const string &s, char delimiter){
 	Vs tokens;
 	string token;
 	istringstream tokenStream(s);
-	
+
 	while (getline(tokenStream, token, delimiter)){
 		tokens.push_back(token);
 	}
@@ -90,10 +90,10 @@ Graph readContent(int *start){
 		getline(content, buffer);
 		if(buffer.size() == 0) break;
 		tokens = split(buffer, ',');
-		
+
 		id = stoi(tokens[0]);
 		authors = fixString(tokens[7]);
-		av_rating = stod(tokens[12]);
+		av_rating = stod(tokens[13]);
 
 		G[id].authors.insert(authors);
 		G[id].av_rating = av_rating;
@@ -101,5 +101,5 @@ Graph readContent(int *start){
 
 	*start = G.size();
 	content.close();
-	return G;	
+	return G;
 }
