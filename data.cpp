@@ -18,18 +18,18 @@ string fixString(string s){
 Vs split(string s, char delimiter, char delimiterIgnore){
 	Vs tokens;
   string word = "";
-  bool beginQuote = false;
+  bool beginDelimiterIgnore = false;
   for(char& c : s) {
-    if((c != delimiter && c != delimiterIgnore) || (c == delimiter && beginQuote == true)){
+    if((c != delimiter && c != delimiterIgnore) || (c == delimiter && beginDelimiterIgnore == true)){
       word += c;
-    } else if(c == delimiter && beginQuote == false){
+    } else if(c == delimiter && beginDelimiterIgnore == false){
       tokens.push_back(word);
       word = "";
     } else if(c == delimiterIgnore){
-      if(beginQuote == true){
-        beginQuote = false;
+      if(beginDelimiterIgnore == true){
+        beginDelimiterIgnore = false;
       } else {
-        beginQuote = true;
+        beginDelimiterIgnore = true;
       }
     }
   }
