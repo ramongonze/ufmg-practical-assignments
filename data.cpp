@@ -15,6 +15,28 @@ string fixString(string s){
 	return s;
 }
 
+Vs split(string s, char delimiter, char delimiterIgnore){
+	Vs tokens;
+  string word = "";
+  bool beginQuote = false;
+  for(char& c : s) {
+    if((c != delimiter && c != delimiterIgnore) || (c == delimiter && beginQuote == true)){
+      word += c;
+    } else if(c == delimiter && beginQuote == false){
+      tokens.push_back(word);
+      word = "";
+    } else if(c == delimiterIgnore){
+      if(beginQuote == true){
+        beginQuote = false;
+      } else {
+        beginQuote = true;
+      }
+    }
+  }
+
+	return tokens;
+}
+
 Vs split(const string &s, char delimiter){
 	Vs tokens;
 	string token;
@@ -78,8 +100,9 @@ Graph readContent(int *start){
 	float av_rating;
 	Graph G;
 	ifstream content;
-	string buffer, authors;
+	string buffer;
 	Vs tokens;
+	Vs authors;
 
 	content.open(CONTENT);
 
@@ -89,13 +112,17 @@ Graph readContent(int *start){
 	while(!content.eof()){
 		getline(content, buffer);
 		if(buffer.size() == 0) break;
-		tokens = split(buffer, ',');
+
+		tokens = split(buffer, ',', '"');
 
 		id = stoi(tokens[0]);
-		authors = fixString(tokens[7]);
+		authors = split(fixString(tokens[7]), ',');
 		av_rating = stod(tokens[13]);
 
-		G[id].authors.insert(authors);
+		for(vector<string>::iterator it = authors.begin(); it != authors.end(); it++){
+			G[id].authors.insert(*it);
+		}
+
 		G[id].av_rating = av_rating;
 	}
 

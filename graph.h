@@ -20,10 +20,10 @@ typedef struct Vertex{
 		  where the set V of vertexes can be divided in two disjoint sets:
 			U: Set of users
 			B: Set of books
-		
+
 		- The edges between users and books represent the rate given by an user to a book.
 		  The rates can be 1, 2, 3, 4 or 5.
-		
+
 		- The id for a book is an integer, from 1 to #books.
 		- The id for an user is also an integer, from #books+1 to #users.
 		  For example: User with id=2 will have his id equals to #books+2
