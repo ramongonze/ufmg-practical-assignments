@@ -6,11 +6,24 @@ string getBookSeries(string s){
 	int parenthesesPosition = s.find("(");
 
 	if(parenthesesPosition > 0){
-		Vs tokens = split(s.substr(parenthesesPosition + 1, s.size()), ',');
-		if(tokens.size() > 0){
-			return fixString(tokens[0]);
+		s = s.substr(parenthesesPosition + 1, s.size());
+
+		int commaPosition = s.find(",");
+
+		if(commaPosition > 0){
+			Vs tokens = split(s, ',');
+			if(tokens.size() > 0){
+				return fixString(tokens[0]);
+			} else {
+				return fixString(s);
+			}
 		} else {
-			return "";
+			int hashPosition = s.find("#");
+			if(hashPosition > 0){
+				return fixString(s.substr(0, hashPosition));
+			} else {
+				return fixString(s);
+			}
 		}
 	} else {
 		return "";
@@ -82,7 +95,7 @@ Graph readContent(int *start){
 
 		id = stoi(tokens[0]);
 		IDS[stoi(tokens[1])] = id;
-		authors = split(fixString(tokens[7]), ',');
+		authors = split(tokens[7], ',');
 
 		for(unsigned int a = 0; a < authors.size(); a++){
 			G[id].authors.insert(authors[a]);

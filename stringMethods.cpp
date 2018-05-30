@@ -2,9 +2,17 @@
 
 using namespace std;
 
+string trim(const string& text){
+    size_t firstOcurrence = text.find_first_not_of(' ');
+    if (string::npos == firstOcurrence)
+        return text;
+
+    size_t lastOcurrence = text.find_last_not_of(' ');
+    return text.substr(firstOcurrence, (lastOcurrence - firstOcurrence + 1));
+}
+
 string fixString(string s){
-	if(s[0] == ' ')
-		s = s.substr(1,s.size());
+	s = trim(s);
 
 	for(unsigned int i = 0; i < s.size(); i++)
 		if(ispunct(s[i]))
@@ -12,7 +20,7 @@ string fixString(string s){
 		else
 			s[i] = tolower(s[i]);
 
-	return s;
+	return trim(s);
 }
 
 vector<string> split(string s, char delimiter, char delimiterIgnore){
@@ -43,7 +51,7 @@ vector<string> split(const string &s, char delimiter){
 	istringstream tokenStream(s);
 
 	while (getline(tokenStream, token, delimiter)){
-		tokens.push_back(token);
+		tokens.push_back(fixString(token));
 	}
 
 	return tokens;
