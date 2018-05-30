@@ -4,8 +4,7 @@
 
 using namespace std;
 
-typedef pair<float,int> BookIdRating; //par que se refere à <'nota','id do livro'>
-typedef vector<BookIdRating> rankUser;
-typedef map<int,rankUser> answers; //<id do usuario, rankUser>
+typedef vector<int> rankUser; //lista de book ids, já ordenada
+typedef map<int,rankUser> userRanks; //<id do usuario, rankUser>
 
 void evaluate();
