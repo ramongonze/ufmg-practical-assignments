@@ -19,8 +19,6 @@
 
 using namespace std;
 
-typedef vector<string> Vs;
-
 typedef map<int, int> Mii;
 
 // Read tags for all books, and insert them into a set of tags of a book.
@@ -38,5 +36,5 @@ void readBookTags(Mii &IDS);
 */
 Graph readContent(int *start);
 
-// Read ratings given by users to books, and build a graph.
+// Read ratings given by users to books, and build a graph (view graph structure in grap.h).
 void readRatings(Graph &G, int start);

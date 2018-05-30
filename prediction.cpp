@@ -22,3 +22,5 @@ double itemSim(Graph &G, int b1, int b2){
 
 	return s;
 }
+
+double contentSim(Graph &G, int b1, int b2);

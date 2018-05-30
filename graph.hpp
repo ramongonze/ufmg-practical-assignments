@@ -32,9 +32,10 @@ typedef struct Vertex{
 		  (when the vertex is an user) or which users read it (when the vertex is a book).
 	*/
 	int id;
-	string series;
 	double sig; // Sigma factor, used to calculate the similarity between 2 books
 	float av_rating; // Average rating given to a book or average rating given to all books that the user has read.
+	string series; // Name of the serie which the book belongs.
+				   // For example: A Harry Potter book belongs to serie "harry potter" (there are 8 books in total).
 	Ss authors; // Authors of a book or authors of all books that the user has read.
 	Si tags; // Tags which describe the book or tags of all books that the user has read.
 	AdjList neighboors;
@@ -44,5 +45,5 @@ typedef struct Vertex{
 typedef map<int, Vertex> Graph; // Graph representation. Key: user/book id. Value: user/book description
 typedef map<int, Vertex>::iterator GraphIt; // Iterator of a graph
 
-// Add and edge = (u, v)
+// Add an edge = (u, v)
 void addEdge(Graph &G, int u, int v, int weight);

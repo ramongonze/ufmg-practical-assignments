@@ -14,18 +14,18 @@ string getBookSeries(string s){
 			Vs tokens = split(s, ',');
 			if(tokens.size() > 0){
 				return fixString(tokens[0]);
-			} else {
+			}else{
 				return fixString(s);
 			}
-		} else {
+		}else{
 			int hashPosition = s.find("#");
 			if(hashPosition > 0){
 				return fixString(s.substr(0, hashPosition));
-			} else {
+			}else{
 				return fixString(s);
 			}
 		}
-	} else {
+	}else{
 		return "";
 	}
 }
@@ -109,7 +109,7 @@ Graph readContent(int *start){
 		}
 
 		G[id].series = getBookSeries(tokens[10]);
-		G[id].av_rating = stod(tokens[13]);
+		G[id].av_rating = stod(tokens[12]);
 	}
 	readBookTags(IDS);
 
