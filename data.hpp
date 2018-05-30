@@ -11,9 +11,12 @@
 #endif
 
 #define _DATA_
+#define RankSize 10
 /* ------------- Dataset ------------ */
 #define RATINGS "DataSet/ratings.csv"
+#define ANSWERS "DataSet/answers.csv"
 #define CONTENT "DataSet/books.csv"
+#define PREDICTIONS "Output/predictions.csv"
 #define BOOK_TAGS "DataSet/book_tags.csv"
 /* ---------------------------------- */
 

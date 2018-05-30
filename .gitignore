@@ -1,3 +1,6 @@
+# executables
+*.out
+
 # others
 *.pdf
 *.csv
