@@ -39,7 +39,6 @@ typedef struct Vertex{
 	Ss authors; // Authors of a book or authors of all books that the user has read.
 	Si tags; // Tags which describe the book or tags of all books that the user has read.
 	AdjList neighboors;
-
 }Vertex;
 
 typedef map<int, Vertex> Graph; // Graph representation. Key: user/book id. Value: user/book description

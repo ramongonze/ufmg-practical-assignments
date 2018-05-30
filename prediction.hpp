@@ -6,6 +6,7 @@
 #include "data.hpp"
 #endif
 
+#define _PREDICTION_
 
 /* Computes similarity between books b1 and b2. The variables b1 and b2
    are the book_id of the books. */

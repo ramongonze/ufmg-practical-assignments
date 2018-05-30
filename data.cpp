@@ -62,9 +62,7 @@ void readRatings(Graph &G, int start){
 	file.close();
 }
 
-void readBookTags(Mii &IDS){
-	Graph G;
-
+void readBookTags(Mii &IDS, Graph &G){
 	ifstream file;
 	string buffer;
 	Vs tokens;
@@ -111,7 +109,7 @@ Graph readContent(int *start){
 		G[id].series = getBookSeries(tokens[10]);
 		G[id].av_rating = stod(tokens[12]);
 	}
-	readBookTags(IDS);
+	readBookTags(IDS, G);
 
 	*start = G.size();
 	content.close();

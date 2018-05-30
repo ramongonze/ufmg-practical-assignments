@@ -22,7 +22,7 @@ using namespace std;
 typedef map<int, int> Mii;
 
 // Read tags for all books, and insert them into a set of tags of a book.
-void readBookTags(Mii &IDS);
+void readBookTags(Mii &IDS, Graph &G);
 
 /*
 	- Read books content from the dataset. The content contains:
