@@ -3,6 +3,10 @@
 #include "data.hpp"
 #endif
 
+#ifndef _PREDICTION_
+#include "prediction.hpp"
+#endif
+
 int main(){
 
 	Graph G;

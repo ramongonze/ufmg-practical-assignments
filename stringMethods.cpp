@@ -3,14 +3,17 @@
 using namespace std;
 
 string fixString(string s){
-	if(s[0] == ' ')
+	while(s.size() > 0 && s[0] == ' ')
 		s = s.substr(1,s.size());
 
 	for(unsigned int i = 0; i < s.size(); i++)
-		if(ispunct(s[i]))
+		if(ispunct(s[i]) || (i < s.size()-1 && s[i] == ' ' && s[i+1] == ' '))
 			s.erase(i--, 1);
 		else
 			s[i] = tolower(s[i]);
+		
+	if(s[s.size()-1] == ' ')
+		s.erase(s.size()-1, 1);
 
 	return s;
 }

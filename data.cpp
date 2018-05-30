@@ -35,8 +35,15 @@ void readRatings(Graph &G, int start){
 		v = stoi(tokens[1]) + start;
 		r = stoi(tokens[2]);
 
-		G[u].neighboors[v] = r;
-		G[v].neighboors[u] = r;
+		addEdge(G,u,v,r);
+		addEdge(G,v,u,r);
+	}
+
+	for(GraphIt i = G.begin(); i != G.end(); i++){
+		if(i->second.sig > 0)
+			i->second.sig = sqrt(i->second.sig);
+		else
+			i->second.sig = 1;
 	}
 
 	file.close();
@@ -82,10 +89,10 @@ Graph readContent(int *start){
 
 		id = stoi(tokens[0]);
 		IDS[stoi(tokens[1])] = id;
-		authors = split(fixString(tokens[7]), ',');
+		authors = split(tokens[7], ',');
 
 		for(unsigned int a = 0; a < authors.size(); a++){
-			G[id].authors.insert(authors[a]);
+			G[id].authors.insert(fixString(authors[a]));
 		}
 
 		G[id].series = getBookSeries(tokens[10]);

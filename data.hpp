@@ -1,10 +1,11 @@
 #include "stringMethods.hpp"
+#include <vector>
+#include <string>
+#include <cmath>
 #include <sstream>
 #include <fstream>
-#include <string>
 #include <iostream>
 
-#include <vector>
 #ifndef _GRAPH_
 #include "graph.hpp"
 #endif
