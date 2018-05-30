@@ -2,6 +2,15 @@
 
 using namespace std;
 
+string trim(const string& text){
+    size_t firstOcurrence = text.find_first_not_of(' ');
+    if (string::npos == firstOcurrence)
+        return text;
+
+    size_t lastOcurrence = text.find_last_not_of(' ');
+    return text.substr(firstOcurrence, (lastOcurrence - firstOcurrence + 1));
+}
+
 string fixString(string s){
 	while(s.size() > 0 && s[0] == ' ')
 		s = s.substr(1,s.size());
@@ -46,7 +55,7 @@ vector<string> split(const string &s, char delimiter){
 	istringstream tokenStream(s);
 
 	while (getline(tokenStream, token, delimiter)){
-		tokens.push_back(token);
+		tokens.push_back(fixString(token));
 	}
 
 	return tokens;
