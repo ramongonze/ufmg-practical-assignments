@@ -17,22 +17,22 @@ string fixString(string s){
 
 Vs split(string s, char delimiter, char delimiterIgnore){
 	Vs tokens;
-  string word = "";
-  bool beginDelimiterIgnore = false;
-  for(char& c : s) {
-    if((c != delimiter && c != delimiterIgnore) || (c == delimiter && beginDelimiterIgnore == true)){
-      word += c;
-    } else if(c == delimiter && beginDelimiterIgnore == false){
-      tokens.push_back(word);
+	string word = "";
+	bool beginDelimiterIgnore = false;
+	for(char &c : s) {
+		if((c != delimiter && c != delimiterIgnore) || (c == delimiter && beginDelimiterIgnore == true)){
+			word += c;
+		}else if(c == delimiter && beginDelimiterIgnore == false){
+		tokens.push_back(word);
       word = "";
-    } else if(c == delimiterIgnore){
-      if(beginDelimiterIgnore == true){
-        beginDelimiterIgnore = false;
-      } else {
-        beginDelimiterIgnore = true;
-      }
-    }
-  }
+   	}else if(c == delimiterIgnore){
+      	if(beginDelimiterIgnore == true){
+				beginDelimiterIgnore = false;
+			}else{
+				beginDelimiterIgnore = true;
+			}
+		}
+	}
 
 	return tokens;
 }
@@ -74,7 +74,7 @@ void readRatings(Graph &G, int start){
 	file.close();
 }
 
-Graph readBookTags(){
+void readBookTags(Mii &IDS){
 	Graph G;
 
 	ifstream file;
@@ -88,11 +88,10 @@ Graph readBookTags(){
 		getline(file, buffer);
 		if(buffer.size() == 0) break;
 		tokens = split(buffer, ',');
-		G[stoi(tokens[0])].tags.insert(stoi(tokens[1]));
+		G[IDS[stoi(tokens[0])]].tags.insert(stoi(tokens[1]));
 	}
 
 	file.close();
-	return G;
 }
 
 Graph readContent(int *start){
@@ -103,10 +102,9 @@ Graph readContent(int *start){
 	string buffer;
 	Vs tokens;
 	Vs authors;
+	Mii IDS; // Map which key = goodreads_book_id and value = book_id.
 
 	content.open(CONTENT);
-
-	G = readBookTags();
 
 	getline(content, buffer); // Ignores the header
 	while(!content.eof()){
@@ -116,15 +114,17 @@ Graph readContent(int *start){
 		tokens = split(buffer, ',', '"');
 
 		id = stoi(tokens[0]);
+		IDS[stoi(tokens[1])] = id;
 		authors = split(fixString(tokens[7]), ',');
 		av_rating = stod(tokens[13]);
 
-		for(vector<string>::iterator it = authors.begin(); it != authors.end(); it++){
-			G[id].authors.insert(*it);
+		for(unsigned int a = 0; a < authors.size(); a++){
+			G[id].authors.insert(authors[a]);
 		}
 
 		G[id].av_rating = av_rating;
 	}
+	readBookTags(IDS);
 
 	*start = G.size();
 	content.close();

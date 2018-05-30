@@ -19,14 +19,17 @@ using namespace std;
 
 typedef vector<string> Vs;
 
+typedef map<int, int> Mii;
+
 // Split a string in a delimiter
 Vs split(const string& s, char delimiter);
+Vs split(string s, char delimiter, char delimiterIgnore);
 
 // Put all letters in lowercase and remove all punctuations from a given string.
 string fixString(string s);
 
 // Read tags for all books, and insert them into a set of tags of a book.
-Graph readBookTags();
+void readBookTags(Mii &IDS);
 
 /*
 	- Read books content from the dataset. The content contains:
