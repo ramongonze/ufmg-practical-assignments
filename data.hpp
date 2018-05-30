@@ -20,8 +20,10 @@ using namespace std;
 
 typedef vector<string> Vs;
 
+typedef map<int, int> Mii;
+
 // Read tags for all books, and insert them into a set of tags of a book.
-Graph readBookTags();
+void readBookTags(Mii &IDS);
 
 /*
 	- Read books content from the dataset. The content contains:

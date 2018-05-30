@@ -42,7 +42,7 @@ void readRatings(Graph &G, int start){
 	file.close();
 }
 
-Graph readBookTags(){
+void readBookTags(Mii &IDS){
 	Graph G;
 
 	ifstream file;
@@ -56,11 +56,10 @@ Graph readBookTags(){
 		getline(file, buffer);
 		if(buffer.size() == 0) break;
 		tokens = split(buffer, ',');
-		G[stoi(tokens[0])].tags.insert(stoi(tokens[1]));
+		G[IDS[stoi(tokens[0])]].tags.insert(stoi(tokens[1]));
 	}
 
 	file.close();
-	return G;
 }
 
 Graph readContent(int *start){
@@ -70,10 +69,9 @@ Graph readContent(int *start){
 	string buffer;
 	Vs tokens;
 	Vs authors;
+	Mii IDS; // Map which key = goodreads_book_id and value = book_id.
 
 	content.open(CONTENT);
-
-	G = readBookTags();
 
 	getline(content, buffer); // Ignores the header
 	while(!content.eof()){
@@ -83,15 +81,17 @@ Graph readContent(int *start){
 		tokens = split(buffer, ',', '"');
 
 		id = stoi(tokens[0]);
+		IDS[stoi(tokens[1])] = id;
 		authors = split(fixString(tokens[7]), ',');
 
-		for(vector<string>::iterator it = authors.begin(); it != authors.end(); it++){
-			G[id].authors.insert(*it);
+		for(unsigned int a = 0; a < authors.size(); a++){
+			G[id].authors.insert(authors[a]);
 		}
 
 		G[id].series = getBookSeries(tokens[10]);
 		G[id].av_rating = stod(tokens[13]);
 	}
+	readBookTags(IDS);
 
 	*start = G.size();
 	content.close();
