@@ -1,52 +1,20 @@
 #ifndef _DATA_
-#include "data.h"
+#include "data.hpp"
 #endif
 
-string fixString(string s){
-	if(s[0] == ' ')
-		s = s.substr(1,s.size());
+string getBookSeries(string s){
+	int parenthesesPosition = s.find("(");
 
-	for(unsigned int i = 0; i < s.size(); i++)
-		if(ispunct(s[i]))
-			s.erase(i--, 1);
-		else
-			s[i] = tolower(s[i]);
-
-	return s;
-}
-
-Vs split(string s, char delimiter, char delimiterIgnore){
-	Vs tokens;
-  string word = "";
-  bool beginDelimiterIgnore = false;
-  for(char& c : s) {
-    if((c != delimiter && c != delimiterIgnore) || (c == delimiter && beginDelimiterIgnore == true)){
-      word += c;
-    } else if(c == delimiter && beginDelimiterIgnore == false){
-      tokens.push_back(word);
-      word = "";
-    } else if(c == delimiterIgnore){
-      if(beginDelimiterIgnore == true){
-        beginDelimiterIgnore = false;
-      } else {
-        beginDelimiterIgnore = true;
-      }
-    }
-  }
-
-	return tokens;
-}
-
-Vs split(const string &s, char delimiter){
-	Vs tokens;
-	string token;
-	istringstream tokenStream(s);
-
-	while (getline(tokenStream, token, delimiter)){
-		tokens.push_back(token);
+	if(parenthesesPosition > 0){
+		Vs tokens = split(s.substr(parenthesesPosition + 1, s.size()), ',');
+		if(tokens.size() > 0){
+			return fixString(tokens[0]);
+		} else {
+			return "";
+		}
+	} else {
+		return "";
 	}
-
-	return tokens;
 }
 
 void readRatings(Graph &G, int start){
@@ -97,7 +65,6 @@ Graph readBookTags(){
 
 Graph readContent(int *start){
 	int id;
-	float av_rating;
 	Graph G;
 	ifstream content;
 	string buffer;
@@ -117,13 +84,13 @@ Graph readContent(int *start){
 
 		id = stoi(tokens[0]);
 		authors = split(fixString(tokens[7]), ',');
-		av_rating = stod(tokens[13]);
 
 		for(vector<string>::iterator it = authors.begin(); it != authors.end(); it++){
 			G[id].authors.insert(*it);
 		}
 
-		G[id].av_rating = av_rating;
+		G[id].series = getBookSeries(tokens[10]);
+		G[id].av_rating = stod(tokens[13]);
 	}
 
 	*start = G.size();

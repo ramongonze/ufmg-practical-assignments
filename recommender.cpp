@@ -1,6 +1,6 @@
 #include <iostream>
 #ifndef _DATA_
-#include "data.h"
+#include "data.hpp"
 #endif
 
 int main(){

@@ -1,5 +1,5 @@
 #ifndef _GRAPH_
-#include "graph.h"
+#include "graph.hpp"
 #endif
 
 void addEdge(Graph &G, int u, int v, int weight){

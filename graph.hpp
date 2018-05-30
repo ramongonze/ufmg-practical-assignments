@@ -32,6 +32,7 @@ typedef struct Vertex{
 		  (when the vertex is an user) or which users read it (when the vertex is a book).
 	*/
 	int id;
+	string series;
 	double sig; // Sigma factor, used to calculate the similarity between 2 books
 	float av_rating; // Average rating given to a book or average rating given to all books that the user has read.
 	Ss authors; // Authors of a book or authors of all books that the user has read.

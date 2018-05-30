@@ -1,3 +1,4 @@
+#include "stringMethods.hpp"
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -5,12 +6,12 @@
 
 #include <vector>
 #ifndef _GRAPH_
-#include "graph.h"
+#include "graph.hpp"
 #endif
 
 #define _DATA_
 /* ------------- Dataset ------------ */
-#define RATINGS "DataSet/ratings.csv" 
+#define RATINGS "DataSet/ratings.csv"
 #define CONTENT "DataSet/books.csv"
 #define BOOK_TAGS "DataSet/book_tags.csv"
 /* ---------------------------------- */
@@ -18,12 +19,6 @@
 using namespace std;
 
 typedef vector<string> Vs;
-
-// Split a string in a delimiter
-Vs split(const string& s, char delimiter);
-
-// Put all letters in lowercase and remove all punctuations from a given string.
-string fixString(string s);
 
 // Read tags for all books, and insert them into a set of tags of a book.
 Graph readBookTags();
