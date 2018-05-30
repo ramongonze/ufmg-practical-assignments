@@ -1,11 +1,5 @@
-#include <algorithm>
-#include <utility>
-#include <map>
 #include "data.hpp"
-
-typedef pair<float,int> BookIdRating; //par que se refere à <'nota','id do livro'>
-typedef vector<BookIdRating> rankUser;
-typedef map<int,rankUser> answers; //<id do usuario, rankUser>
+#include "evaluate.hpp"
 
 using namespace std;
 
@@ -52,7 +46,7 @@ answers GetAnswers(string answersCsv){
   return response;
 }
 
-int main(int argc, const char *argv[]){
+void evaluate(){
   string predictionsCsv = PREDICTIONS;
   string answersCsv = ANSWERS;
 
@@ -80,6 +74,4 @@ int main(int argc, const char *argv[]){
   } else {
     cout << "MAP:" << mapValue << '\n';
   }
-
-  return 0;
 }
