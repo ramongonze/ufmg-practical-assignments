@@ -1,6 +1,7 @@
+#include <map>
 #include <set>
 #include <string>
-#include <map>
+#include <vector>
 
 #define _GRAPH_
 
@@ -32,13 +33,42 @@ typedef struct Vertex{
 		  (when the vertex is an user) or which users read it (when the vertex is a book).
 	*/
 	int id;
-	double sig; // Sigma factor, used to calculate the similarity between 2 books
-	float av_rating; // Average rating given to a book or average rating given to all books that the user has read.
-	string series; // Name of the serie which the book belongs.
-				   // For example: A Harry Potter book belongs to serie "harry potter" (there are 8 books in total).
-	Ss authors; // Authors of a book or authors of all books that the user has read.
-	Si tags; // Tags which describe the book or tags of all books that the user has read.
 	AdjList neighboors;
+	
+	/* ---------- BOOKS CONTENT ---------- */
+	double sig; // Sigma factor, used to calculate the similarity between 2 books
+	double av_rating; // Average rating given to a book.
+	string series; // Name of the serie which the book belongs. For example: A Harry Potter
+				   // book belongs to serie "harry potter" (there are 8 books in total).
+	Ss authors; // Authors of a book.
+	Si tags; // Tags which describe the book.
+	/* ----------------------------------- */
+
+	/* ---------- USERS CONTENT ---------- */
+	/*
+		- The struct of an user is the union of all content from books that this user read.
+		  This struct can be divided in:
+			-> Books rated positively (rate 4 or 5);
+			-> Books rated negatively (rate 1, 2 or 3).
+		
+		- The attributes with prefix 'pos_' refer to books rated positively and
+		  the ones with prefix 'neg_' refer to books rated negatively.
+	*/
+
+	// Books rated posetively
+	int pos_n; // Number of books rated positively
+	double pos_av_rating;
+	Ss pos_authors;
+	Si pos_tags;
+	Ss pos_series;
+
+	// Books rated negatively
+	int neg_n; // Number of books rated negatively
+	double neg_av_rating;
+	Ss neg_authors;
+	Si neg_tags;
+	Ss neg_series;
+	/* ----------------------------------- */
 }Vertex;
 
 typedef map<int, Vertex> Graph; // Graph representation. Key: user/book id. Value: user/book description

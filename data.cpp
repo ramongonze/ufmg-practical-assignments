@@ -30,26 +30,62 @@ string getBookSeries(string s){
 	}
 }
 
-void readRatings(Graph &G, int start){
+void readRatings(Graph &G, Graph &G2, int start){
+	// Seed used to separate the data set in 2: training and evaluation.
+	srand(1);
+	
 	ifstream file;
 	string buffer;
 	Vs tokens;
-	int u, v, r;
+	int u, b, r;
 
 	file.open(RATINGS);
 
 	getline(file, buffer); // Ignores the header.
-
 	while(!file.eof()){
 		getline(file, buffer);
 		if(buffer.size() == 0) break;
 		tokens = split(buffer, ',');
-		u = stoi(tokens[0]);
-		v = stoi(tokens[1]) + start;
+		b = stoi(tokens[0]);
+		u = stoi(tokens[1]) + start;
 		r = stoi(tokens[2]);
 
-		addEdge(G,u,v,r);
-		addEdge(G,v,u,r);
+		if(G[u].neighboors.find(b) == G[u].neighboors.end() &&
+		   G2[u].neighboors.find(b) == G2[u].neighboors.end()){ // Ignore duplicated ratings
+			if(rand()%100 >= EVALUATION_SIZE){
+				/* 30% of the dataset will be used to access the recommender system*/
+				addEdge(G2,u,b,r);
+			}else{
+				/* 70% of the dataset will be used as historical rates, in item-based and
+				   conten-based approaches.*/
+				addEdge(G,u,b,r);
+				addEdge(G,b,u,r);
+
+				if(r > 3){
+					G[u].pos_authors.insert(G[b].authors.begin(), G[b].authors.end());
+					G[u].pos_tags.insert(G[b].tags.begin(), G[b].tags.end());
+					G[u].pos_series.insert(G[b].series);
+					if(G[u].neighboors.size() == 1){
+						G[u].pos_av_rating = r;
+						G[u].pos_n = 1;
+					}else{
+						G[u].pos_av_rating += r;
+						G[u].pos_n++;
+					}
+				}else{
+					G[u].neg_authors.insert(G[b].authors.begin(), G[b].authors.end());
+					G[u].neg_tags.insert(G[b].tags.begin(), G[b].tags.end());
+					G[u].neg_series.insert(G[b].series);
+					if(G[u].neighboors.size() == 1){
+						G[u].neg_av_rating = r;
+						G[u].neg_n = 1;
+					}else{
+						G[u].neg_av_rating += r;
+						G[u].neg_n++;
+					}
+				}
+			}
+		}
 	}
 
 	for(GraphIt i = G.begin(); i != G.end(); i++){

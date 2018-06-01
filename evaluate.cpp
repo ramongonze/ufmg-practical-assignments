@@ -46,24 +46,24 @@ float MAP(userRanks predictions, userRanks answers){
 
 userRanks GetPredictions(string predictionsCsv){
   ifstream content;
-	string buffer;
+  string buffer;
   userRanks response;
 
-	content.open(predictionsCsv);
+  content.open(predictionsCsv);
 
-	getline(content, buffer);
-	while(!content.eof()){
-		getline(content, buffer);
-		if(buffer.size() == 0) break;
+  getline(content, buffer);
+  while(!content.eof()){
+    getline(content, buffer);
+    if(buffer.size() == 0) break;
 
-		vector<string> tokens = split(buffer, ',');
+    vector<string> tokens = split(buffer, ',');
 
     if(tokens.size() > 0){
       for(int i = 1, max = tokens.size(); i < max; i++){
         response[stoi(tokens[0])].push_back(stoi(tokens[i]));
       }
     }
-	}
+  }
 
   content.close();
 
@@ -72,18 +72,18 @@ userRanks GetPredictions(string predictionsCsv){
 
 userRanks GetAnswers(string answersCsv){
   ifstream content;
-	string buffer;
+  string buffer;
   userRanks response;
   map<int,vector<pair<float,int>>> userBooksRatings;
 
-	content.open(answersCsv);
+  content.open(answersCsv);
 
-	getline(content, buffer);
-	while(!content.eof()){
-		getline(content, buffer);
-		if(buffer.size() == 0) break;
+  getline(content, buffer);
+  while(!content.eof()){
+    getline(content, buffer);
+    if(buffer.size() == 0) break;
 
-		vector<string> tokens = split(buffer, ',');
+    vector<string> tokens = split(buffer, ',');
 
     int book_id = stoi(tokens[0]);
     int user_id = stoi(tokens[1]);
@@ -99,7 +99,7 @@ userRanks GetAnswers(string answersCsv){
         }
       }
     }
-	}
+  }
 
   content.close();
 
