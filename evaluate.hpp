@@ -1,10 +1,12 @@
+#include <cmath>
+#include <ctgmath>
 #include <algorithm>
 #include <utility>
 #include <map>
 
 using namespace std;
 
-typedef vector<int> rankUser; //lista de book ids, já ordenada
-typedef map<int,rankUser> userRanks; //<id do usuario, rankUser>
+typedef vector<int> UserRank; //lista de book ids, já ordenada
+typedef map<int,UserRank> Ranks; //<id do usuario, UserRank>
 
 void evaluate(Graph *graph_answers);
