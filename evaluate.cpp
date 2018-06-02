@@ -12,13 +12,13 @@ float NDCG(Ranks predictions, Ranks answers){
         if(itp->second.size() > 1 && answers.find(itp->first) != answers.end() && answers[itp->first].size() > 1){
             int dcg = 0;
             float idcg = 0;
-            int i = 0;
+            int i = 1;
 
             for(UserRank::iterator itrp = itp->second.begin(); itrp != itp->second.end(); itrp++){
                  dcg += (*itrp)/log2((i++) + 1);
             }
 
-            i = 0;
+            i = 1;
             for(UserRank::iterator itrp = answers[itp->first].begin(); itrp != answers[itp->first].end(); itrp++){
                idcg += (*itrp)/log2((i++) + 1);
             }
@@ -128,8 +128,9 @@ void evaluate(Ranks Predictions, Graph *graph_answers){
     // for(Ranks::iterator it = Answers.begin(); it != Answers.end(); it++){
     //   cout << "User: " << it->first << '\n';
     //   for(UserRank::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
-    //     cout << "--Book: " << itt->second << " - Rating: " << itt->first << '\n';
+    //     cout << (*itt) << ",";
     //   }
+    //   cout << '\n';
     // }
 
     if(ndcgValue < 0){
