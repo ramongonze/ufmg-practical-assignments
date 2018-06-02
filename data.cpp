@@ -33,7 +33,7 @@ string getBookSeries(string s){
 void readRatings(Graph &G, Graph &G2, int start){
 	// Seed used to separate the data set in 2: training and evaluation.
 	srand(1);
-	
+
 	ifstream file;
 	string buffer;
 	Vs tokens;
@@ -46,9 +46,9 @@ void readRatings(Graph &G, Graph &G2, int start){
 		getline(file, buffer);
 		if(buffer.size() == 0) break;
 		tokens = split(buffer, ',');
-		b = stoi(tokens[0]);
-		u = stoi(tokens[1]) + start;
-		r = stoi(tokens[2]);
+		b = stoi(tokens[0]); //book_id
+		u = stoi(tokens[1]) + start; //user_id
+		r = stoi(tokens[2]); //rating
 
 		if(G[u].neighboors.find(b) == G[u].neighboors.end() &&
 		   G2[u].neighboors.find(b) == G2[u].neighboors.end()){ // Ignore duplicated ratings
@@ -113,7 +113,7 @@ Graph readContent(int *start){
 	Vs authors;
 	Mii IDS; // Map which key = goodreads_book_id and value = book_id.
 
-	content.open(CONTENT);
+	content.open(BOOK_CONTENT);
 
 	getline(content, buffer); // Ignores the header
 	while(!content.eof()){

@@ -12,12 +12,11 @@
 
 #define _DATA_
 #define EVALUATION_SIZE 70 // Percentage of the data set used to evaluate the recommender system
-#define RankSize 10
+#define RANK_SIZE 10
 
 /* ------------- Dataset ------------ */
 #define RATINGS "DataSet/ratings.csv"
-#define ANSWERS "DataSet/answers.csv"
-#define CONTENT "DataSet/books.csv"
+#define BOOK_CONTENT "DataSet/books.csv"
 #define PREDICTIONS "Output/predictions.csv"
 #define BOOK_TAGS "DataSet/book_tags.csv"
 /* ---------------------------------- */
@@ -41,7 +40,7 @@ void readBookTags(Mii &IDS, Graph &G);
 */
 Graph readContent(int *start);
 
-/* 
+/*
 	Read ratings given by users to books, and build a graph G (view graph structure in grap.h).
 	The graph G2 contains the test set, that is, pairs (user,book) used in the recommender system
 	to generate ranks. In the end, the rates of each (user,book) from G2 are used to calculate
