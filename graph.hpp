@@ -56,15 +56,13 @@ typedef struct Vertex{
 	*/
 
 	// Books rated posetively
-	int pos_n; // Number of books rated positively
-	double pos_av_rating;
+	AdjList pos_neighboors;
 	Ss pos_authors;
 	Si pos_tags;
 	Ss pos_series;
 
 	// Books rated negatively
-	int neg_n; // Number of books rated negatively
-	double neg_av_rating;
+	AdjList neg_neighboors;
 	Ss neg_authors;
 	Si neg_tags;
 	Ss neg_series;

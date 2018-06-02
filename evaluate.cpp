@@ -3,22 +3,22 @@
 
 using namespace std;
 
-float NDCG(userRanks predictions, userRanks answers){
+float NDCG(Ranks predictions, Ranks answers){
   return -1.0;
 }
 
-float MAP(userRanks predictions, userRanks answers){
+float MAP(Ranks predictions, Ranks answers){
   vector<float> results;
   float sumResult = 0;
 
-  for(userRanks::iterator itp = predictions.begin(); itp != predictions.end(); itp++){
+  for(Ranks::iterator itp = predictions.begin(); itp != predictions.end(); itp++){
     if(itp->second.size() > 1 && answers.find(itp->first) != answers.end() && answers[itp->first].size() > 1){
       float sum = 0;
       int correct = 0;
       int count = 0;
       int position = 1;
       int size = answers[itp->first].size();
-      for(rankUser::iterator itrp = itp->second.begin(); itrp != itp->second.end(); itrp++){
+      for(UserRank::iterator itrp = itp->second.begin(); itrp != itp->second.end(); itrp++){
         if(size >= count){
           if((*itrp) == answers[itp->first][count]){ //confere se o ranking retornado acertou nessa posição
            correct++;
@@ -44,10 +44,10 @@ float MAP(userRanks predictions, userRanks answers){
   return sumResult/results.size();
 }
 
-userRanks GetPredictions(string predictionsCsv){
+Ranks GetPredictions(string predictionsCsv){
   ifstream content;
   string buffer;
-  userRanks response;
+  Ranks response;
 
   content.open(predictionsCsv);
 
@@ -70,10 +70,10 @@ userRanks GetPredictions(string predictionsCsv){
   return response;
 }
 
-userRanks GetAnswers(string answersCsv){
+Ranks GetAnswers(string answersCsv){
   ifstream content;
   string buffer;
-  userRanks response;
+  Ranks response;
   map<int,vector<pair<float,int>>> userBooksRatings;
 
   content.open(answersCsv);
@@ -113,16 +113,16 @@ userRanks GetAnswers(string answersCsv){
 }
 
 void evaluate(){
-  userRanks Predictions = GetPredictions(PREDICTIONS);
-  userRanks Answers = GetAnswers(ANSWERS);
+  Ranks Predictions = GetPredictions(PREDICTIONS);
+  Ranks Answers = GetAnswers(ANSWERS);
 
   float ndcgValue = NDCG(Predictions, Answers);
   float mapValue = MAP(Predictions, Answers);
 
   //usar para conferir os ranks das respostas
-  // for(userRanks::iterator it = Answers.begin(); it != Answers.end(); it++){
+  // for(Ranks::iterator it = Answers.begin(); it != Answers.end(); it++){
   //   cout << "User: " << it->first << '\n';
-  //   for(rankUser::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
+  //   for(UserRank::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
   //     cout << "--Book: " << itt->second << " - Rating: " << itt->first << '\n';
   //   }
   // }

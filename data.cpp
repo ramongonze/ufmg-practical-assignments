@@ -65,24 +65,12 @@ void readRatings(Graph &G, Graph &G2, int start){
 					G[u].pos_authors.insert(G[b].authors.begin(), G[b].authors.end());
 					G[u].pos_tags.insert(G[b].tags.begin(), G[b].tags.end());
 					G[u].pos_series.insert(G[b].series);
-					if(G[u].neighboors.size() == 1){
-						G[u].pos_av_rating = r;
-						G[u].pos_n = 1;
-					}else{
-						G[u].pos_av_rating += r;
-						G[u].pos_n++;
-					}
+					G[u].pos_neighboors[b] = r;
 				}else{
 					G[u].neg_authors.insert(G[b].authors.begin(), G[b].authors.end());
 					G[u].neg_tags.insert(G[b].tags.begin(), G[b].tags.end());
 					G[u].neg_series.insert(G[b].series);
-					if(G[u].neighboors.size() == 1){
-						G[u].neg_av_rating = r;
-						G[u].neg_n = 1;
-					}else{
-						G[u].neg_av_rating += r;
-						G[u].neg_n++;
-					}
+					G[u].neg_neighboors[b] = r;
 				}
 			}
 		}
