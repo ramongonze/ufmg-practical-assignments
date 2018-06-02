@@ -36,7 +36,7 @@ float NDCG(Ranks predictions, Ranks answers){
     }
 
     return sumResult/results.size();
-    
+
     }catch(int e){
         return -1.0;
     }
@@ -78,37 +78,11 @@ float MAP(Ranks predictions, Ranks answers){
     }
 
     return sumResult/results.size();
-    
+
     }catch(int e){
         return -1.0;
     }
 }
-
-Ranks GetPredictions(string predictionsCsv){
-    ifstream content;
-    string buffer;
-    Ranks response;
-
-    content.open(predictionsCsv);
-
-    getline(content, buffer);
-    while(!content.eof()){
-        getline(content, buffer);
-        if(buffer.size() == 0) break;
-
-        vector<string> tokens = split(buffer, ',');
-
-        if(tokens.size() > 0){
-            for(int i = 1, max = tokens.size(); i < max; i++){
-                response[stoi(tokens[0])].push_back(stoi(tokens[i]));
-            }
-        }
-    }
-
-    content.close();
-
-    return response;
-}   
 
 Ranks GetAnswers(Graph *graph_answers){
     Ranks response;
@@ -120,7 +94,7 @@ Ranks GetAnswers(Graph *graph_answers){
             int idBook = itt->first;
             int rating = itt->second;
 
-            if(userBooksRatings.find(idUser) == userBooksRatings.end() || 
+            if(userBooksRatings.find(idUser) == userBooksRatings.end() ||
                userBooksRatings[idUser].size() < RANK_SIZE ||
                userBooksRatings[idUser][RANK_SIZE - 1].first < rating){
                 userBooksRatings[idUser].push_back(make_pair(rating, idBook));
@@ -144,8 +118,7 @@ Ranks GetAnswers(Graph *graph_answers){
     return response;
 }
 
-void evaluate(Graph *graph_answers){
-    Ranks Predictions = GetPredictions(PREDICTIONS);
+void evaluate(Ranks Predictions, Graph *graph_answers){
     Ranks Answers = GetAnswers(graph_answers);
 
     float ndcgValue = NDCG(Predictions, Answers);
