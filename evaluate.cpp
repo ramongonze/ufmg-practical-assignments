@@ -70,38 +70,28 @@ userRanks GetPredictions(string predictionsCsv){
   return response;
 }
 
-userRanks GetAnswers(string answersCsv){
-  ifstream content;
-  string buffer;
+userRanks GetAnswers(Graph *graph_answers){
   userRanks response;
   map<int,vector<pair<float,int>>> userBooksRatings;
 
-  content.open(answersCsv);
+  for(GraphIt it = (*graph_answers).begin(); it != (*graph_answers).end(); it++){
+    int idUser = it->first;
+    for(AdjListIt itt = it->second.neighboors.begin(); itt != it->second.neighboors.end(); itt++){
+      int idBook = itt->first;
+      int rating = itt->second;
 
-  getline(content, buffer);
-  while(!content.eof()){
-    getline(content, buffer);
-    if(buffer.size() == 0) break;
+      if(userBooksRatings.find(idUser) == userBooksRatings.end() || userBooksRatings[idUser].size() < RANK_SIZE || userBooksRatings[idUser][RANK_SIZE - 1].first < rating){
+        userBooksRatings[idUser].push_back(make_pair(rating, idBook));
 
-    vector<string> tokens = split(buffer, ',');
-
-    int book_id = stoi(tokens[0]);
-    int user_id = stoi(tokens[1]);
-    float rating = stod(tokens[2]);
-
-    if(userBooksRatings.find(user_id) == userBooksRatings.end() || userBooksRatings[user_id].size() < RankSize || userBooksRatings[user_id][RankSize - 1].first < rating){
-      userBooksRatings[user_id].push_back(make_pair(rating, book_id));
-
-      if(userBooksRatings[user_id].size() >= RankSize){
-        sort(userBooksRatings[user_id].rbegin(),userBooksRatings[user_id].rend());
-        if(userBooksRatings[user_id].size() > RankSize){
-          userBooksRatings[user_id].pop_back();
+        if(userBooksRatings[idUser].size() >= RANK_SIZE){
+          sort(userBooksRatings[idUser].rbegin(),userBooksRatings[idUser].rend());
+          if(userBooksRatings[idUser].size() > RANK_SIZE){
+            userBooksRatings[idUser].pop_back();
+          }
         }
       }
     }
   }
-
-  content.close();
 
   for(map<int,vector<pair<float,int>>>::iterator it = userBooksRatings.begin(); it != userBooksRatings.end(); it++){
     for(vector<pair<float,int>>::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
@@ -112,9 +102,9 @@ userRanks GetAnswers(string answersCsv){
   return response;
 }
 
-void evaluate(){
+void evaluate(Graph *graph_answers){
   userRanks Predictions = GetPredictions(PREDICTIONS);
-  userRanks Answers = GetAnswers(ANSWERS);
+  userRanks Answers = GetAnswers(graph_answers);
 
   float ndcgValue = NDCG(Predictions, Answers);
   float mapValue = MAP(Predictions, Answers);
