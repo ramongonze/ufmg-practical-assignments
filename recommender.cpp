@@ -21,7 +21,6 @@ int main(){
 
 	for(GraphIt v = G2.begin(); v != G2.end(); v++){
 		int u = v->first;
-
 		if(negPercentage(G,u) >= NEG_PERCENTAGE){
 			// If the user has more negative feedback than positive
 			R[u] = predictItemBased(G,G2,S,u,1);
