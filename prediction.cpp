@@ -2,7 +2,7 @@
 #include "prediction.hpp"
 #endif
 
-double negPecentage(Graph &G, int user){
+double negPercentage(Graph &G, int user){
 	return 100 * ((double)(G[user].neg_neighboors.size())/G[user].neighboors.size());
 }
 
@@ -73,12 +73,63 @@ UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int ty
 	for(unsigned int i = 0; i < sim.size(); i++)
 		r.push_back(sim[i].second);
 
-	cout << "user:" << user;
-	for(unsigned int i = 0; i < r.size(); i++)
-		cout << " |" << r[i] << "|";
-	cout << endl;
-
 	return r;
 }
 
-double contentSim(Graph &G, int b1, int b2);
+double contentSim(Graph &G, int u, int b){
+	double s1 = 0;
+	double s2 = 0;
+
+	// Authors
+	if(G[u].pos_authors.size() < G[b].authors.size()){
+		for(SsIt a = G[u].pos_authors.begin(); a != G[u].pos_authors.end(); a++)
+			if(G[b].authors.find(*a) != G[b].authors.end())
+				s1++;
+		s1 = s1/G[u].pos_authors.size();
+	}else{
+		for(SsIt a = G[b].authors.begin(); a != G[b].authors.end(); a++)
+			if(G[u].pos_authors.find(*a) != G[u].pos_authors.end())
+				s1++;
+		s1 = s1/G[b].authors.size();
+	}
+
+	// Tags
+	if(G[u].pos_tags.size() < G[b].tags.size()){
+		for(SiIt t = G[u].pos_tags.begin(); t != G[u].pos_tags.end(); t++)
+			if(G[b].tags.find(*t) != G[b].tags.end())
+				s2++;
+		s2 = s2/G[u].pos_tags.size();
+	}else{
+		for(SiIt t = G[b].tags.begin(); t != G[b].tags.end(); t++)
+			if(G[u].pos_tags.find(*t) != G[u].pos_tags.end())
+				s2++;
+		s2 = s2/G[b].tags.size();
+	}
+
+	return (s1*AUTHORS_W + s2*TAGS_W)/(AUTHORS_W+TAGS_W);
+}
+
+void reRank(Graph &G, int user, UserRank &R){
+	Vdi sim;
+
+	if(G[user].pos_neighboors.size() == 0){
+		// The user does not have any positive feedback. The rank continues the same.
+		return;
+	}
+
+	for(unsigned int i = 0; i < R.size(); i++){
+		double rate = contentSim(G,user,R[i]);
+		if(G[user].pos_series.find(G[R[i]].series) != G[user].pos_series.end()){
+			/* The book R[i] belongs to the same series of one of the books rated
+			   positively by the user.*/
+			rate = rate*SERIES_BOOST;
+			if(rate > 1.0) rate = 1;
+		}
+		sim.push_back(make_pair(rate, R[i]));
+	}
+
+	sort(sim.rbegin(), sim.rend());
+
+	for(unsigned int i = 0; i < sim.size(); i++)
+		R[i] = sim[i].second;
+}
