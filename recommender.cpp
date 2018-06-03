@@ -5,6 +5,7 @@
 
 #ifndef _PREDICTION_
 #include "prediction.hpp"
+#include "evaluate.hpp"
 #endif
 
 int main(){
@@ -31,6 +32,8 @@ int main(){
 			R[u] = predictItemBased(G,G2,S,u,2);
 		}
 	}
+
+	evaluate(R, &G2);
 
 	return 0;
 }
