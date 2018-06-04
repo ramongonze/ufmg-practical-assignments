@@ -99,11 +99,9 @@ Ranks GetAnswers(Graph *graph_answers){
                userBooksRatings[idUser][RANK_SIZE - 1].first < rating){
                 userBooksRatings[idUser].push_back(make_pair(rating, idBook));
 
-                if(userBooksRatings[idUser].size() >= RANK_SIZE){
-                    sort(userBooksRatings[idUser].rbegin(),userBooksRatings[idUser].rend());
-                    if(userBooksRatings[idUser].size() > RANK_SIZE){
-                        userBooksRatings[idUser].pop_back();
-                    }
+                sort(userBooksRatings[idUser].rbegin(),userBooksRatings[idUser].rend());
+                if(userBooksRatings[idUser].size() > RANK_SIZE){
+                    userBooksRatings[idUser].pop_back();
                 }
             }
         }
