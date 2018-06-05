@@ -19,6 +19,7 @@ int main(){
 	G = readContent(&start);
 	readRatings(G, G2, start);
 
+	Ranks R2;
 	for(GraphIt v = G2.begin(); v != G2.end(); v++){
 		int u = v->first;
 		if(negPercentage(G,u) >= NEG_PERCENTAGE){
@@ -26,13 +27,17 @@ int main(){
 			R[u] = predictItemBased(G,G2,S,u,1);
 			// Rerank based in the positive books content.
 			reRank(G,u,R[u]);
+			R2[u] = predictItemBased(G,G2,S,u,2);
 		}else{
 			// If the user has more positive feedback than negative
-			R[u] = predictItemBased(G,G2,S,u,2);
+			//R[u] = predictItemBased(G,G2,S,u,2);
 		}
 	}
 
-	evaluate(R, &G2);
+	cout << "--NORMAL--" << endl;
+	evaluate(R2, G2);
+	cout << "--HEURISTIC--" << endl;
+	evaluate(R, G2);
 
 	return 0;
 }

@@ -12,7 +12,7 @@
 
 #define _DATA_
 #define EVALUATION_SIZE 70 // Percentage of the data set used to evaluate the recommender system
-#define RANK_SIZE 10
+#define RANK_SIZE 30
 
 /* ------------- Dataset ------------ */
 #define RATINGS "DataSet/ratings.csv"

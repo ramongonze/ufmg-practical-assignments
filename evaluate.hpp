@@ -9,6 +9,9 @@
 using namespace std;
 
 typedef vector<int> UserRank; //lista de book ids, já ordenada
-typedef map<int,UserRank> Ranks; //<id do usuario, UserRank>
+typedef map<int, UserRank> Ranks; //<id do usuario, UserRank>
+typedef map<int, UserRank>::iterator RanksIt;
 
-void evaluate(Ranks Predictions, Graph *graph_answers);
+double NDCG(Ranks predictions, Ranks answers, Graph &G2);
+
+void evaluate(Ranks R, Graph &G2);

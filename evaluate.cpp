@@ -1,55 +1,35 @@
 #include "data.hpp"
 #include "evaluate.hpp"
+#include <iostream>
 
 using namespace std;
 
-float NDCG(Ranks predictions, Ranks answers){
-  try{
-    vector<float> results;
-    float sumResult = 0;
+double NDCG(Ranks predictions, Ranks answers, Graph &G2){
+    double nDCG = 0;
 
-    for(Ranks::iterator itp = predictions.begin(); itp != predictions.end(); itp++){
-        if(itp->second.size() > 1 && answers.find(itp->first) != answers.end() && answers[itp->first].size() > 1){
-            int dcg = 0;
-            float idcg = 0;
-            int i = 1;
-
-            for(UserRank::iterator itrp = itp->second.begin(); itrp != itp->second.end(); itrp++){
-                 dcg += (*itrp)/log2((i++) + 1);
-            }
-
-            i = 1;
-            for(UserRank::iterator itrp = answers[itp->first].begin(); itrp != answers[itp->first].end(); itrp++){
-               idcg += (*itrp)/log2((i++) + 1);
-            }
-
-            if(dcg > 0 && idcg > 0){
-                 results.push_back(dcg/idcg);
-            }else{
-                results.push_back(0.0);
-            }
+    for(RanksIt itp = predictions.begin(); itp != predictions.end(); itp++){
+        int u = itp->first;
+        double dcg = 0;
+        double idcg = 0;
+        for(unsigned int i = 0; i < itp->second.size() && i < RANK_SIZE; i++){
+            dcg += (pow(2,G2[u].neighboors[itp->second[i]])-1)/(log2(i+2));
+            idcg += (pow(2,G2[u].neighboors[answers[u][i]])-1)/(log2(i+2));
         }
+        if(idcg != 0)
+            nDCG += dcg/idcg;
     }
 
-    for(vector<float>::iterator it = results.begin(); it != results.end(); it++){
-        sumResult += (*it);
-    }
-
-    return sumResult/results.size();
-
-    }catch(int e){
-        return -1.0;
-    }
+    return nDCG/predictions.size();
 }
 
-float MAP(Ranks predictions, Ranks answers){
+double MAP(Ranks predictions, Ranks answers){
     try{
-        vector<float> results;
-        float sumResult = 0;
+        vector<double> results;
+        double sumResult = 0;
 
-    for(Ranks::iterator itp = predictions.begin(); itp != predictions.end(); itp++){
+    for(RanksIt itp = predictions.begin(); itp != predictions.end(); itp++){
         if(itp->second.size() > 1 && answers.find(itp->first) != answers.end() && answers[itp->first].size() > 1){
-            float sum = 0;
+            double sum = 0;
             int correct = 0;
             int count = 0;
             int position = 1;
@@ -58,7 +38,7 @@ float MAP(Ranks predictions, Ranks answers){
                 if(size >= count){
                     if((*itrp) == answers[itp->first][count]){ //confere se o ranking retornado acertou nessa posição
                         correct++;
-                        sum += (float)correct/position;
+                        sum += (double)correct/position;
                     }
                 }
                 count++;
@@ -73,7 +53,7 @@ float MAP(Ranks predictions, Ranks answers){
         }
     }
 
-    for(vector<float>::iterator it = results.begin(); it != results.end(); it++){
+    for(vector<double>::iterator it = results.begin(); it != results.end(); it++){
         sumResult += (*it);
     }
 
@@ -84,11 +64,11 @@ float MAP(Ranks predictions, Ranks answers){
     }
 }
 
-Ranks GetAnswers(Graph *graph_answers){
+Ranks GetAnswers(Graph &G2){
     Ranks response;
-    map<int,vector<pair<float,int>>> userBooksRatings;
+    map<int,vector<pair<double,int>>> userBooksRatings;
 
-    for(GraphIt it = (*graph_answers).begin(); it != (*graph_answers).end(); it++){
+    for(GraphIt it = G2.begin(); it != G2.end(); it++){
         int idUser = it->first;
         for(AdjListIt itt = it->second.neighboors.begin(); itt != it->second.neighboors.end(); itt++){
             int idBook = itt->first;
@@ -107,8 +87,8 @@ Ranks GetAnswers(Graph *graph_answers){
         }
     }
 
-    for(map<int,vector<pair<float,int>>>::iterator it = userBooksRatings.begin(); it != userBooksRatings.end(); it++){
-        for(vector<pair<float,int>>::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
+    for(map<int,vector<pair<double,int>>>::iterator it = userBooksRatings.begin(); it != userBooksRatings.end(); it++){
+        for(vector<pair<double,int>>::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
             response[it->first].push_back(itt->second);
         }
     }
@@ -116,14 +96,14 @@ Ranks GetAnswers(Graph *graph_answers){
     return response;
 }
 
-void evaluate(Ranks Predictions, Graph *graph_answers){
-    Ranks Answers = GetAnswers(graph_answers);
+void evaluate(Ranks R, Graph &G2){
+    Ranks Answers = GetAnswers(G2);
 
-    float ndcgValue = NDCG(Predictions, Answers);
-    float mapValue = MAP(Predictions, Answers);
+    double ndcgValue = NDCG(R, Answers, G2);
+    double mapValue = MAP(R, Answers);
 
     //usar para conferir os ranks das respostas
-    // for(Ranks::iterator it = Answers.begin(); it != Answers.end(); it++){
+    // for(RanksIt it = Answers.begin(); it != Answers.end(); it++){
     //   cout << "User: " << it->first << '\n';
     //   for(UserRank::iterator itt = it->second.begin(); itt != it->second.end(); itt++){
     //     cout << (*itt) << ",";
