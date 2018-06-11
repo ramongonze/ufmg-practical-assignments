@@ -76,6 +76,40 @@ UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int ty
 	return r;
 }
 
+UserRank predictContentBased(Graph &G, Graph &G2, int user){
+	Vdi sim;
+	UserRank r;
+
+	for(AdjListIt it = G2[user].neighboors.begin(); it != G2[user].neighboors.end(); it++){
+		int book = it->first;
+		sim.push_back(make_pair(contentSim2(G, user, book), book));
+	}
+
+	sort(sim.rbegin(), sim.rend());
+
+	for(unsigned int i = 0; i < sim.size(); i++)
+		r.push_back(sim[i].second);
+
+	return r;
+}
+
+UserRank predictRandom(Graph &G2, int user){
+	Vdi sim;
+	UserRank r;
+
+	for(AdjListIt it = G2[user].neighboors.begin(); it != G2[user].neighboors.end(); it++){
+		int book = it->first;
+		sim.push_back(make_pair(rand(), book));
+	}
+
+	sort(sim.rbegin(), sim.rend());
+
+	for(unsigned int i = 0; i < sim.size(); i++)
+		r.push_back(sim[i].second);
+
+	return r;
+}
+
 double contentSim(Graph &G, int u, int b){
 	double s1 = 0;
 	double s2 = 0;
@@ -102,6 +136,39 @@ double contentSim(Graph &G, int u, int b){
 	}else{
 		for(SiIt t = G[b].tags.begin(); t != G[b].tags.end(); t++)
 			if(G[u].pos_tags.find(*t) != G[u].pos_tags.end())
+				s2++;
+		s2 = s2/G[b].tags.size();
+	}
+
+	return (s1*AUTHORS_W + s2*TAGS_W)/(AUTHORS_W+TAGS_W);
+}
+
+double contentSim2(Graph &G, int u, int b){
+	double s1 = 0;
+	double s2 = 0;
+
+	// Authors
+	if(G[u].authors.size() < G[b].authors.size()){
+		for(SsIt a = G[u].authors.begin(); a != G[u].authors.end(); a++)
+			if(G[b].authors.find(*a) != G[b].authors.end())
+				s1++;
+		s1 = s1/G[u].authors.size();
+	}else{
+		for(SsIt a = G[b].authors.begin(); a != G[b].authors.end(); a++)
+			if(G[u].authors.find(*a) != G[u].authors.end())
+				s1++;
+		s1 = s1/G[b].authors.size();
+	}
+
+	// Tags
+	if(G[u].tags.size() < G[b].tags.size()){
+		for(SiIt t = G[u].tags.begin(); t != G[u].tags.end(); t++)
+			if(G[b].tags.find(*t) != G[b].tags.end())
+				s2++;
+		s2 = s2/G[u].tags.size();
+	}else{
+		for(SiIt t = G[b].tags.begin(); t != G[b].tags.end(); t++)
+			if(G[u].tags.find(*t) != G[u].tags.end())
 				s2++;
 		s2 = s2/G[b].tags.size();
 	}

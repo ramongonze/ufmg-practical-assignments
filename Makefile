@@ -1,7 +1,7 @@
 all: clean recommender
 
 recommender: stringMethods evaluate graph data prediction
-	g++ recommender.cpp -o recommender.out prediction.o graph.o evaluate.o stringMethods.o data.o -O2 -O3 -O4 -Wall -Wextra -Werror -std=c++11 -pedantic
+	g++ recommender.cpp -o recommender prediction.o graph.o evaluate.o stringMethods.o data.o -O2 -O3 -O4 -Wall -Wextra -Werror -std=c++11 -pedantic
 
 evaluate:
 	g++ -c evaluate.cpp -O2 -O3 -O4 -Wall -std=c++11 -pedantic
