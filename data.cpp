@@ -46,8 +46,8 @@ void readRatings(Graph &G, Graph &G2, int start){
 		getline(file, buffer);
 		if(buffer.size() == 0) break;
 		tokens = split(buffer, ',');
-		b = stoi(tokens[0]); //book_id
-		u = stoi(tokens[1]) + start; //user_id
+		u = stoi(tokens[0]) + start; //user_id
+		b = stoi(tokens[1]); //book_id
 		r = stoi(tokens[2]); //rating
 
 		if((G[u].neighboors.find(b) == G[u].neighboors.end() && G2.find(u) == G2.end()) ||
@@ -55,9 +55,6 @@ void readRatings(Graph &G, Graph &G2, int start){
 		   G2[u].neighboors.find(b) == G2[u].neighboors.end())){ // Ignore duplicated ratings
 			if(rand()%100 >= EVALUATION_SIZE){
 				/* 30% of the dataset will be used to access the recommender system */
-				if(u == 10002){
-					printf("chegou\n");
-				}
 				addEdge(G2,u,b,r);
 			}else{
 				/* 70% of the dataset will be used as historical rates, in item-based and

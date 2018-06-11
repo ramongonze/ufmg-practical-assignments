@@ -32,10 +32,8 @@ UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int ty
 	AdjListIt cur, end;
 
 	if(type == 1){
-		cur = G[user].neg_neighboors.begin();
 		end = G[user].neg_neighboors.end();
 	}else{
-		cur = G[user].neighboors.begin();
 		end = G[user].neighboors.end();
 	}
 
@@ -43,6 +41,12 @@ UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int ty
 		int b1 = v->first;
 		double num = 0;
 		double den = 0;
+		
+		if(type == 1){
+			cur = G[user].neg_neighboors.begin();
+		}else{
+			cur = G[user].neighboors.begin();
+		}
 
 		while(cur != end){
 			int b2 = cur->first;
@@ -70,7 +74,7 @@ UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int ty
 	}
 
 	UserRank r;
-	for(unsigned int i = 0; i < sim.size(); i++)
+	for(unsigned int i = 0; i < sim.size() && i < RANK_SIZE; i++)
 		r.push_back(sim[i].second);
 
 	return r;
@@ -83,23 +87,6 @@ UserRank predictContentBased(Graph &G, Graph &G2, int user){
 	for(AdjListIt it = G2[user].neighboors.begin(); it != G2[user].neighboors.end(); it++){
 		int book = it->first;
 		sim.push_back(make_pair(contentSim2(G, user, book), book));
-	}
-
-	sort(sim.rbegin(), sim.rend());
-
-	for(unsigned int i = 0; i < sim.size(); i++)
-		r.push_back(sim[i].second);
-
-	return r;
-}
-
-UserRank predictRandom(Graph &G2, int user){
-	Vdi sim;
-	UserRank r;
-
-	for(AdjListIt it = G2[user].neighboors.begin(); it != G2[user].neighboors.end(); it++){
-		int book = it->first;
-		sim.push_back(make_pair(rand(), book));
 	}
 
 	sort(sim.rbegin(), sim.rend());

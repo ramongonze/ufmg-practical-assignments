@@ -19,7 +19,7 @@ int main(){
 	G = readContent(&start);
 	readRatings(G, G2, start);
 
-	Ranks R2, R3, R4;
+	Ranks R2, R3;
 	for(GraphIt v = G2.begin(); v != G2.end(); v++){
 		int u = v->first;
 		if(negPercentage(G,u) >= NEG_PERCENTAGE){
@@ -30,13 +30,10 @@ int main(){
 				reRank(G,u,R[u]);
 				R2[u] = predictItemBased(G,G2,S,u,2);
 				R3[u] = predictContentBased(G, G2, u);
-				R4[u] = predictRandom(G2, u);
 			}
 		}
 	}
 
-	cout << "--RANDOM--" << endl;
-	evaluate(R4, G2);
 	cout << "--COMMON CONTENT-BASED--" << endl;
 	evaluate(R3, G2);
 	cout << "--COMMON ITEM-BASED--" << endl;

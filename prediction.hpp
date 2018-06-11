@@ -11,7 +11,7 @@
 #endif
 
 #define _PREDICTION_
-#define NEG_PERCENTAGE 80
+#define NEG_PERCENTAGE 70
 #define SERIES_BOOST 1.4 // Gives a boost of 40% to similarity if the books belongs to 
 						 // the same series.
 #define AUTHORS_W 25 // Authors' weight to calculate similarity between two books
@@ -61,5 +61,3 @@ void reRank(Graph &G, int user, UserRank &R);
 UserRank predictContentBased(Graph &G, Graph &G2, int user);
 
 double contentSim2(Graph &G, int u, int b);
-
-UserRank predictRandom(Graph &G2, int user);
