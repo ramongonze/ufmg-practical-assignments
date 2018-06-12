@@ -80,57 +80,7 @@ UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int ty
 	return r;
 }
 
-UserRank predictContentBased(Graph &G, Graph &G2, int user){
-	Vdi sim;
-	UserRank r;
-
-	for(AdjListIt it = G2[user].neighboors.begin(); it != G2[user].neighboors.end(); it++){
-		int book = it->first;
-		sim.push_back(make_pair(contentSim2(G, user, book), book));
-	}
-
-	sort(sim.rbegin(), sim.rend());
-
-	for(unsigned int i = 0; i < sim.size(); i++)
-		r.push_back(sim[i].second);
-
-	return r;
-}
-
 double contentSim(Graph &G, int u, int b){
-	double s1 = 0;
-	double s2 = 0;
-
-	// Authors
-	if(G[u].pos_authors.size() < G[b].authors.size()){
-		for(SsIt a = G[u].pos_authors.begin(); a != G[u].pos_authors.end(); a++)
-			if(G[b].authors.find(*a) != G[b].authors.end())
-				s1++;
-		s1 = s1/G[u].pos_authors.size();
-	}else{
-		for(SsIt a = G[b].authors.begin(); a != G[b].authors.end(); a++)
-			if(G[u].pos_authors.find(*a) != G[u].pos_authors.end())
-				s1++;
-		s1 = s1/G[b].authors.size();
-	}
-
-	// Tags
-	if(G[u].pos_tags.size() < G[b].tags.size()){
-		for(SiIt t = G[u].pos_tags.begin(); t != G[u].pos_tags.end(); t++)
-			if(G[b].tags.find(*t) != G[b].tags.end())
-				s2++;
-		s2 = s2/G[u].pos_tags.size();
-	}else{
-		for(SiIt t = G[b].tags.begin(); t != G[b].tags.end(); t++)
-			if(G[u].pos_tags.find(*t) != G[u].pos_tags.end())
-				s2++;
-		s2 = s2/G[b].tags.size();
-	}
-
-	return (s1*AUTHORS_W + s2*TAGS_W)/(AUTHORS_W+TAGS_W);
-}
-
-double contentSim2(Graph &G, int u, int b){
 	double s1 = 0;
 	double s2 = 0;
 
@@ -163,6 +113,54 @@ double contentSim2(Graph &G, int u, int b){
 	return (s1*AUTHORS_W + s2*TAGS_W)/(AUTHORS_W+TAGS_W);
 }
 
+double contentPosSim(Graph &G, int u, int b){
+	double s1 = 0;
+	double s2 = 0;
+
+	// Authors
+	if(G[u].pos_authors.size() < G[b].authors.size()){
+		for(SsIt a = G[u].pos_authors.begin(); a != G[u].pos_authors.end(); a++)
+			if(G[b].authors.find(*a) != G[b].authors.end())
+				s1++;
+		s1 = s1/G[u].pos_authors.size();
+	}else{
+		for(SsIt a = G[b].authors.begin(); a != G[b].authors.end(); a++)
+			if(G[u].pos_authors.find(*a) != G[u].pos_authors.end())
+				s1++;
+		s1 = s1/G[b].authors.size();
+	}
+
+	// Tags
+	if(G[u].pos_tags.size() < G[b].tags.size()){
+		for(SiIt t = G[u].pos_tags.begin(); t != G[u].pos_tags.end(); t++)
+			if(G[b].tags.find(*t) != G[b].tags.end())
+				s2++;
+		s2 = s2/G[u].pos_tags.size();
+	}else{
+		for(SiIt t = G[b].tags.begin(); t != G[b].tags.end(); t++)
+			if(G[u].pos_tags.find(*t) != G[u].pos_tags.end())
+				s2++;
+		s2 = s2/G[b].tags.size();
+	}
+
+	return (s1*AUTHORS_W + s2*TAGS_W)/(AUTHORS_W+TAGS_W);
+}
+
+UserRank predictContentBased(Graph &G, Graph &G2, int user){
+	Vdi sim;
+	UserRank r;
+
+	for(AdjListIt book = G2[user].neighboors.begin(); book != G2[user].neighboors.end(); book++)
+		sim.push_back(make_pair(contentSim(G, user, book->first), book->first));
+
+	sort(sim.rbegin(), sim.rend());
+
+	for(unsigned int i = 0; i < sim.size() && i < RANK_SIZE; i++)
+		r.push_back(sim[i].second);
+
+	return r;
+}
+
 void reRank(Graph &G, int user, UserRank &R){
 	Vdi sim;
 
@@ -172,7 +170,7 @@ void reRank(Graph &G, int user, UserRank &R){
 	}
 
 	for(unsigned int i = 0; i < R.size(); i++){
-		double rate = contentSim(G,user,R[i]);
+		double rate = contentPosSim(G,user,R[i]);
 		if(G[user].pos_series.find(G[R[i]].series) != G[user].pos_series.end()){
 			/* The book R[i] belongs to the same series of one of the books rated
 			   positively by the user.*/

@@ -1,10 +1,10 @@
-#include "stringMethods.hpp"
-#include <vector>
-#include <string>
 #include <cmath>
-#include <sstream>
 #include <fstream>
 #include <iostream>
+
+#ifndef _STRING_
+#include "stringMethods.hpp"
+#endif
 
 #ifndef _GRAPH_
 #include "graph.hpp"
@@ -12,18 +12,23 @@
 
 #define _DATA_
 #define EVALUATION_SIZE 70 // Percentage of the data set used to evaluate the recommender system
-#define RANK_SIZE 10
+#define RANK_SIZE 10 // The rank size used to recommend a "top-n ranking"
 
 /* ------------- Dataset ------------ */
 #define RATINGS "DataSet/ratings.csv"
 #define BOOK_CONTENT "DataSet/books.csv"
-#define PREDICTIONS "Output/predictions.csv"
 #define BOOK_TAGS "DataSet/book_tags.csv"
 /* ---------------------------------- */
 
 using namespace std;
 
 typedef map<int, int> Mii;
+
+/*
+	Used to get the string related to a series of a book. The dataset is not standardized.
+	This function solves those inconsistencies.
+*/
+string getBookSeries(string s);
 
 // Read tags for all books, and insert them into a set of tags of a book.
 void readBookTags(Mii &IDS, Graph &G);

@@ -30,6 +30,60 @@ string getBookSeries(string s){
 	}
 }
 
+void readBookTags(Mii &IDS, Graph &G){
+	ifstream file;
+	string buffer;
+	Vs tokens;
+
+	file.open(BOOK_TAGS);
+
+	getline(file, buffer); // Ignores the header.
+	while(!file.eof()){
+		getline(file, buffer);
+		if(buffer.size() == 0) break;
+		tokens = split(buffer, ',');
+		G[IDS[stoi(tokens[0])]].tags.insert(stoi(tokens[1]));
+	}
+
+	file.close();
+}
+
+Graph readContent(int *start){
+	int id;
+	Graph G;
+	ifstream content;
+	string buffer;
+	Vs tokens;
+	Vs authors;
+	Mii IDS; // Map which key = goodreads_book_id and value = book_id.
+
+	content.open(BOOK_CONTENT);
+
+	getline(content, buffer); // Ignores the header
+	while(!content.eof()){
+		getline(content, buffer);
+		if(buffer.size() == 0) break;
+
+		tokens = split(buffer, ',', '"');
+
+		id = stoi(tokens[0]);
+		IDS[stoi(tokens[1])] = id;
+		authors = split(tokens[7], ',');
+
+		for(unsigned int a = 0; a < authors.size(); a++){
+			G[id].authors.insert(fixString(authors[a]));
+		}
+
+		G[id].series = getBookSeries(tokens[10]);
+		G[id].av_rating = stod(tokens[12]);
+	}
+	readBookTags(IDS, G);
+
+	*start = G.size();
+	content.close();
+	return G;
+}
+
 void readRatings(Graph &G, Graph &G2, int start){
 	// Seed used to separate the data set in 2: training and evaluation.
 	srand(1);
@@ -85,58 +139,4 @@ void readRatings(Graph &G, Graph &G2, int start){
 	}
 
 	file.close();
-}
-
-void readBookTags(Mii &IDS, Graph &G){
-	ifstream file;
-	string buffer;
-	Vs tokens;
-
-	file.open(BOOK_TAGS);
-
-	getline(file, buffer); // Ignores the header.
-	while(!file.eof()){
-		getline(file, buffer);
-		if(buffer.size() == 0) break;
-		tokens = split(buffer, ',');
-		G[IDS[stoi(tokens[0])]].tags.insert(stoi(tokens[1]));
-	}
-
-	file.close();
-}
-
-Graph readContent(int *start){
-	int id;
-	Graph G;
-	ifstream content;
-	string buffer;
-	Vs tokens;
-	Vs authors;
-	Mii IDS; // Map which key = goodreads_book_id and value = book_id.
-
-	content.open(BOOK_CONTENT);
-
-	getline(content, buffer); // Ignores the header
-	while(!content.eof()){
-		getline(content, buffer);
-		if(buffer.size() == 0) break;
-
-		tokens = split(buffer, ',', '"');
-
-		id = stoi(tokens[0]);
-		IDS[stoi(tokens[1])] = id;
-		authors = split(tokens[7], ',');
-
-		for(unsigned int a = 0; a < authors.size(); a++){
-			G[id].authors.insert(fixString(authors[a]));
-		}
-
-		G[id].series = getBookSeries(tokens[10]);
-		G[id].av_rating = stod(tokens[12]);
-	}
-	readBookTags(IDS, G);
-
-	*start = G.size();
-	content.close();
-	return G;
 }

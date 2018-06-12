@@ -45,11 +45,25 @@ double itemSim(Graph &G, int b1, int b2);
 UserRank predictItemBased(Graph &G, Graph &G2, Similarities &S, int user, int type);
 
 /*
-	Computes similarity between books b1 and b2 based on their authors, tags and
-	if the book belongs to a serie of books (two books in the same serie are very
-	similar). The variables b1 and b2 are the book_id of the books.
+	- Computes similarity between user u and book b, based on book authors, tags and if the book
+	belongs a serie. All the books u read make up the user's representation, used to compare with b.
+	
+	- u is an user id and b is a book id.
 */
-double contentSim(Graph &G, int b1, int b2);
+double contentSim(Graph &G, int u, int b);
+
+// The same as contentSim, but using only positive (rated with 4 or 5) neighboors of u.
+double contentPosSim(Graph &G, int u, int b);
+
+/*
+	- Returns a rank for all users, according to pairs <user,book> in G2, using the approach
+	 content-based.
+	
+	- The function can return two ranks:
+		type = 1 -> return a rank using only positive neighboors of an user.
+		type = 2 -> return a rank using all neighboors of an user.
+*/
+UserRank predictContentBased(Graph &G, Graph &G2, int user);
 
 /*
 	- Rerank a user rank according to the similarities with books he rated posetively.
@@ -57,7 +71,3 @@ double contentSim(Graph &G, int b1, int b2);
 	  If the user has no positive feedback, the rank continues the same.
 */
 void reRank(Graph &G, int user, UserRank &R);
-
-UserRank predictContentBased(Graph &G, Graph &G2, int user);
-
-double contentSim2(Graph &G, int u, int b);

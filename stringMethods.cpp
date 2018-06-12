@@ -1,4 +1,6 @@
+#ifndef _STRING_
 #include "stringMethods.hpp"
+#endif
 
 using namespace std;
 
@@ -16,6 +18,18 @@ string fixString(string s){
 		s.erase(s.size()-1, 1);
 
 	return s;
+}
+
+Vs split(const string &s, char delimiter){
+	Vs tokens;
+	string token;
+	istringstream tokenStream(s);
+
+	while (getline(tokenStream, token, delimiter)){
+		tokens.push_back(fixString(token));
+	}
+
+	return tokens;
 }
 
 Vs split(string s, char delimiter, char delimiterIgnore){
@@ -36,18 +50,6 @@ Vs split(string s, char delimiter, char delimiterIgnore){
 				beginDelimiterIgnore = true;
 			}
 		}
-	}
-
-	return tokens;
-}
-
-Vs split(const string &s, char delimiter){
-	Vs tokens;
-	string token;
-	istringstream tokenStream(s);
-
-	while (getline(tokenStream, token, delimiter)){
-		tokens.push_back(fixString(token));
 	}
 
 	return tokens;

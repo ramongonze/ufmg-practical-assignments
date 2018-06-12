@@ -29,7 +29,7 @@ int main(){
 				// Rerank based in the positive books content.
 				reRank(G,u,R[u]);
 				R2[u] = predictItemBased(G,G2,S,u,2);
-				R3[u] = predictContentBased(G, G2, u);
+				R3[u] = predictContentBased(G,G2,u);
 			}
 		}
 	}
