@@ -116,7 +116,7 @@ void readRatings(Graph &G, Graph &G2, int start){
 				addEdge(G,u,b,r);
 				addEdge(G,b,u,r);
 
-				if(r > 3){
+				if(r > THRESHOLD_RATE){
 					G[u].pos_authors.insert(G[b].authors.begin(), G[b].authors.end());
 					G[u].pos_tags.insert(G[b].tags.begin(), G[b].tags.end());
 					G[u].pos_series.insert(G[b].series);
