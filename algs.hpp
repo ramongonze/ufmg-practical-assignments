@@ -3,17 +3,21 @@
 #include <stack>
 #include <vector>
 #include <limits>
+#include <stdio.h>
 #include <algorithm>
 
 using namespace std;
 
+#define _ALGS_ 
 #define INF 10000000 // Infinite
 
 typedef pair<int,int> pii;
+typedef pair<double, pair<int,int> > pdii;
 
 typedef struct Vertex{
 	int x,y; // Cordinates in an euclidan space
-	double dist; // Used in Dijkstra and A*. Distance between a vertex i and the source
+	double dist; // Used in Dijkstra. Distance between a vertex i and the source
+	double heuristic; // Used in A*. Distance between a vertex i and the source + heuristic
 	bool visited; // Used in DFS, Dijkstra and A*.
 	vector<int> adjs; // Adjacent list of a vertex
 
@@ -25,6 +29,7 @@ typedef struct Vertex{
 
 	Vertex(int _x, int _y){
 		x = _x, y = _y;
+		heuristic = INF;
 		dist = INF;
 		visited = false;
 	}
@@ -59,13 +64,13 @@ Graph generateMaze(int n, int m);
  * Each wall is a pair of coordinates:
  * x1,x2,y1,y2;x3,x4,y3,y4; ...
 */
-void printMaze(Graph G, int n, int m);
+void printMaze(Graph &G, int n, int m);
 
 // Dijkstra implementation with a priority queue.
-void dijkstra(Graph &G, int s, int t);
+int dijkstra(Graph &G, int s, int t);
 
 /*
  * The A* Algorithm implemented here uses the heuristic of euclidean
  * distance between two vertices, where each vertex has coordinates x and y
  */
-void aStar(Graph &G, int s, int t);
+int aStar(Graph &G, int s, int t);

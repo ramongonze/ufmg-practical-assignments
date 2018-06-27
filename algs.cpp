@@ -1,14 +1,14 @@
 #include "algs.hpp"
-#include <stdio.h>
 
 void dfs(Graph &G, Graph &G2, stack<int> &S, int u){
 	G[u].visited = true;
-
 	// Shuffle the order of neighboors in the adjacent list
 	random_shuffle(G[u].adjs.begin(), G[u].adjs.end());
+	//printf("size: %ld\n",G[u].adjs.size());
 
 	for(int i = 0; i < G[u].adjs.size(); ++i){
 		int v = G[u].adjs[i];
+		//printf("u:%d, v:%d\n",u,v);
 		if(G[v].visited == false){
 			G2[u].adjs.push_back(v);
 			G2[v].adjs.push_back(u);
@@ -21,29 +21,27 @@ void dfs(Graph &G, Graph &G2, stack<int> &S, int u){
 Graph generateMaze(int n, int m){
 	// Each vertex (x,y) has neighboors: (x,y-1), (x+1,y), (x,y+1), (x-1,y)
 
-	srand(3);
-
 	Graph G; // All vertex starts with 4 walls around it.
 	Graph G2; // Solution. Each wall removed from G is added in G2
 	stack<int> S;
 
 	for(int i = 0; i < n; i++){
-		int c = n*i;
+		int c = m*i;
 		for(int j = 0; j < m; j++){
 			int u = c + j; // Vertex index
 			G.push_back(Vertex(j,i));
 			G2.push_back(Vertex(j,i));
 			// Left neighboor
-			if(j-1 >= 0) G[u].adjs.push_back(c + j-1);
+			if(j-1 >= 0) G[u].adjs.push_back(u-1);
 
 			// Up neighboor
-			if(i+1 < n) G[u].adjs.push_back(c+n + j);				
+			if(i+1 < n) G[u].adjs.push_back(u+m);				
 
 			// Right neighboor
-			if(j+1 < m) G[u].adjs.push_back(c + j+1);				
+			if(j+1 < m) G[u].adjs.push_back(u+1);				
 			
 			// Down neighboor
-			if(i-1 >= 0) G[u].adjs.push_back(c-n + j);	
+			if(i-1 >= 0) G[u].adjs.push_back(u-m);	
 		}
 	}
 
@@ -66,7 +64,11 @@ void printMaze(Graph &G, int n, int m){
 	 * d -> down wall
 	*/
 
-	printf("%d,%d\n", n, m); // Print the size of the maze
+	FILE *out;
+
+	out = fopen("out","w");
+
+	fprintf(out,"%d,%d\n", n, m); // Print the size of the maze
 
 	for(int i = 0; i < n*m; i++){
 		int l,u,r,d;
@@ -81,19 +83,26 @@ void printMaze(Graph &G, int n, int m){
 			else if(G[k].y == G[i].y-1) d = 0;
 		}
 
-		if(l) printf("%d,%d,%d,%d;", G[i].x, G[i].x, G[i].y, G[i].y+1);
-		if(u) printf("%d,%d,%d,%d;", G[i].x, G[i].x+1, G[i].y+1, G[i].y+1);
-		if(r) printf("%d,%d,%d,%d;", G[i].x+1, G[i].x+1, G[i].y+1, G[i].y);
-		if(d) printf("%d,%d,%d,%d;", G[i].x, G[i].x+1, G[i].y, G[i].y);
+		if(l) fprintf(out,"%d,%d,%d,%d;", G[i].x, G[i].x, G[i].y, G[i].y+1);
+		if(u) fprintf(out,"%d,%d,%d,%d;", G[i].x, G[i].x+1, G[i].y+1, G[i].y+1);
+		if(r) fprintf(out,"%d,%d,%d,%d;", G[i].x+1, G[i].x+1, G[i].y+1, G[i].y);
+		if(d) fprintf(out,"%d,%d,%d,%d;", G[i].x, G[i].x+1, G[i].y, G[i].y);
 	}
 
-	printf("\n");
+	fprintf(out,"\n");
+	fclose(out);
 }
 
-void dijkstra(Graph &G, int s, int t){
+int dijkstra(Graph &G, int s, int t){
 	priority_queue<pii, vector<pii>, greater<pii> > pq;
+ 	
+	for(int i = 0; i < G.size(); i++){
+		G[i].visited = false;
+		G[i].dist = INF;
+	}
+	G[s].dist = 0;
+
 	pq.push(make_pair(0, s));
- 
 	while(pq.size()){
 		pii a = pq.top(); pq.pop();
 
@@ -106,36 +115,48 @@ void dijkstra(Graph &G, int s, int t){
 		G[u].dist = a.first;
 
 		if(u == t)
-			return;
+			break;
  
 		for(int i = 0; i < G[u].adjs.size(); ++i){
 			int v = G[u].adjs[i];
 			pq.push(make_pair(G[u].dist + 1, v));
 		}
 	}
+
+	return (int)G[t].dist;
 }
 
-void aStar(Graph &G, int s, int t){
-	priority_queue<pii, vector< pii >, greater< pii > > pq;
-	pq.push(make_pair(0, s));
+int aStar(Graph &G, int s, int t){
+	priority_queue<pdii, vector<pdii>, greater<pdii> > pq;
  
+	for(int i = 0; i < G.size(); i++){
+		G[i].visited = false;
+		G[i].dist = INF;
+		G[i].heuristic = INF;
+	}
+	G[s].dist = 0;
+
+	pq.push(make_pair(0, make_pair(0,s)));
 	while(pq.size()){
-		pii a = pq.top(); pq.pop();
+		pdii a = pq.top(); pq.pop();
 		
-		int u = a.second;
+		int u = a.second.second;
 
 		if(G[u].visited)
 			continue;
 		
 		G[u].visited = true;
-		G[u].dist = a.first;
+		G[u].heuristic = a.first;
+		G[u].dist = a.second.first;
 
 		if(u == t)
-			return;
+			break;
  
 		for(int i = 0; i < G[u].adjs.size(); ++i){
 			int v = G[u].adjs[i];
-			pq.push(make_pair(G[u].dist + 1 + (G[v]-G[t]), v));
+			pq.push(make_pair(G[u].heuristic + 1 + (G[v]-G[t]), make_pair(G[u].dist+1,v)));
 		}
 	}
+
+	return (int)G[t].dist;
 }

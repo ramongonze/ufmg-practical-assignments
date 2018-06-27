@@ -13,8 +13,9 @@
 
 import matplotlib.pyplot as plt
 
-n = int(input())
-m = int(input())
+inp = input().split(',')
+n = int(inp[0])
+m = int(inp[1])
 
 l = input().split(';')
 del l[-1]
