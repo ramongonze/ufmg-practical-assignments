@@ -12,12 +12,10 @@ using namespace std;
 #define INF 10000000 // Infinite
 
 typedef pair<int,int> pii;
-typedef pair<double, pair<int,int> > pdii;
 
 typedef struct Vertex{
 	int x,y; // Cordinates in an euclidan space
 	double dist; // Used in Dijkstra. Distance between a vertex i and the source
-	double heuristic; // Used in A*. Distance between a vertex i and the source + heuristic
 	bool visited; // Used in DFS, Dijkstra and A*.
 	vector<int> adjs; // Adjacent list of a vertex
 
@@ -29,7 +27,6 @@ typedef struct Vertex{
 
 	Vertex(int _x, int _y){
 		x = _x, y = _y;
-		heuristic = INF;
 		dist = INF;
 		visited = false;
 	}

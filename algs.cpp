@@ -95,12 +95,6 @@ void printMaze(Graph &G, int n, int m){
 
 int dijkstra(Graph &G, int s, int t){
 	priority_queue<pii, vector<pii>, greater<pii> > pq;
- 	
-	for(int i = 0; i < G.size(); i++){
-		G[i].visited = false;
-		G[i].dist = INF;
-	}
-	G[s].dist = 0;
 
 	pq.push(make_pair(0, s));
 	while(pq.size()){
@@ -127,34 +121,26 @@ int dijkstra(Graph &G, int s, int t){
 }
 
 int aStar(Graph &G, int s, int t){
-	priority_queue<pdii, vector<pdii>, greater<pdii> > pq;
- 
-	for(int i = 0; i < G.size(); i++){
-		G[i].visited = false;
-		G[i].dist = INF;
-		G[i].heuristic = INF;
-	}
-	G[s].dist = 0;
+	priority_queue<pii, vector<pii>, greater<pii> > pq;
 
-	pq.push(make_pair(0, make_pair(0,s)));
+	pq.push(make_pair(0,s));
 	while(pq.size()){
-		pdii a = pq.top(); pq.pop();
+		pii a = pq.top(); pq.pop();
 		
-		int u = a.second.second;
+		int u = a.second;
 
 		if(G[u].visited)
 			continue;
 		
 		G[u].visited = true;
-		G[u].heuristic = a.first;
-		G[u].dist = a.second.first;
+		G[u].dist = a.first - (G[u]-G[t]);
 
 		if(u == t)
 			break;
  
 		for(int i = 0; i < G[u].adjs.size(); ++i){
 			int v = G[u].adjs[i];
-			pq.push(make_pair(G[u].heuristic + 1 + (G[v]-G[t]), make_pair(G[u].dist+1,v)));
+			pq.push(make_pair(G[u].dist + 1 + (G[v]-G[t]),v));
 		}
 	}
 

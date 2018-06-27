@@ -8,7 +8,7 @@ int main(){
 	srand(7); // Used in function generateMaze()
 
 	int n = 100;
-	int m = 100;
+	int m = 131;
 	int d;
 	time_t begin, end;
 
