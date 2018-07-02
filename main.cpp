@@ -5,7 +5,7 @@
 #include <ctime>
 
 int main(int argc, char *argv[]){
-	srand(7); // Used in function generateMaze()
+	srand(time(NULL)); // Used in function generateMaze()
 
 	int n, m; // Maze size
 	int d;
@@ -22,6 +22,9 @@ int main(int argc, char *argv[]){
 	m = atoi(argv[2]);
 
 	maze = generateMaze(n,m);
+	
+	// Uncomment the line above to generate a file which can print
+	// the generated maze using the lib matplotlib from python 3.
 	//printMaze(maze,n,m);
 
 	begin = clock();

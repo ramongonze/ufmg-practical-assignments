@@ -31,7 +31,7 @@ Graph generateMaze(int n, int m){
 	}
 
 	// Iterative Depth-first-search
-	S.push(0);
+	S.push(rand() % n*m); // Initial random vertex
 	while(S.size() > 0){
  		u = S.top(); S.pop();
  		
