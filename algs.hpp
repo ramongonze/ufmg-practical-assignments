@@ -40,9 +40,6 @@ typedef struct Vertex{
 // Graph representation
 typedef vector<Vertex> Graph;
 
-// Depth-first-search
-void dfs(Graph &G, Graph &G2, stack<int> &S, int u);
-
 /* Generate a maze n x m, where each cell in the grid is a vertex in a graph.
  * The generated graph has their vertices' indexes sorted according the example below:
  *

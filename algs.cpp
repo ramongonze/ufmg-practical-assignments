@@ -1,29 +1,12 @@
 #include "algs.hpp"
 
-void dfs(Graph &G, Graph &G2, stack<int> &S, int u){
-	G[u].visited = true;
-	// Shuffle the order of neighboors in the adjacent list
-	random_shuffle(G[u].adjs.begin(), G[u].adjs.end());
-	//printf("size: %ld\n",G[u].adjs.size());
-
-	for(int i = 0; i < G[u].adjs.size(); ++i){
-		int v = G[u].adjs[i];
-		//printf("u:%d, v:%d\n",u,v);
-		if(G[v].visited == false){
-			G2[u].adjs.push_back(v);
-			G2[v].adjs.push_back(u);
-			S.push(v);
-			dfs(G,G2,S,v);
-		}
-	}
-}
-
 Graph generateMaze(int n, int m){
 	// Each vertex (x,y) has neighboors: (x,y-1), (x+1,y), (x,y+1), (x-1,y)
 
+	int u, v, old_u;
 	Graph G; // All vertex starts with 4 walls around it.
 	Graph G2; // Solution. Each wall removed from G is added in G2
-	stack<int> S;
+	stack<int> S, D;
 
 	for(int i = 0; i < n; i++){
 		int c = m*i;
@@ -42,14 +25,34 @@ Graph generateMaze(int n, int m){
 			
 			// Down neighboor
 			if(i-1 >= 0) G[u].adjs.push_back(u-m);	
+
+ 			random_shuffle(G[u].adjs.begin(), G[u].adjs.end());
 		}
 	}
 
-	// DFS execution
+	// Iterative Depth-first-search
 	S.push(0);
 	while(S.size() > 0){
- 		int u = S.top(); S.pop();
- 		dfs(G,G2,S,u);
+ 		u = S.top(); S.pop();
+ 		
+ 		while(u != -1){
+ 			
+ 			G[u].visited = true;
+ 				
+ 			old_u = u; u = -1;
+ 			for(unsigned int i = 0; i < G[old_u].adjs.size(); ++i){
+				v = G[old_u].adjs[i];
+				
+				if(G[v].visited == false){
+					G2[old_u].adjs.push_back(v);
+					G2[v].adjs.push_back(old_u);
+					S.push(v);
+					G[old_u].adjs.erase(G[old_u].adjs.begin());
+					u = v;
+					break;
+				}
+			}
+ 		}
 	}
 
 	return G2;
@@ -74,7 +77,7 @@ void printMaze(Graph &G, int n, int m){
 		int l,u,r,d;
 		l = u = r = d = 1;
 
-		for(int j = 0; j < G[i].adjs.size(); j++){
+		for(unsigned int j = 0; j < G[i].adjs.size(); j++){
 			// Find broken walls (generated in DFS)
 			int k = G[i].adjs[j];
 			if(G[k].x == G[i].x-1) l = 0;
@@ -111,7 +114,7 @@ int dijkstra(Graph &G, int s, int t){
 		if(u == t)
 			break;
  
-		for(int i = 0; i < G[u].adjs.size(); ++i){
+		for(unsigned int i = 0; i < G[u].adjs.size(); ++i){
 			int v = G[u].adjs[i];
 			pq.push(make_pair(G[u].dist + 1, v));
 		}
@@ -138,7 +141,7 @@ int aStar(Graph &G, int s, int t){
 		if(u == t)
 			break;
  
-		for(int i = 0; i < G[u].adjs.size(); ++i){
+		for(unsigned int i = 0; i < G[u].adjs.size(); ++i){
 			int v = G[u].adjs[i];
 			pq.push(make_pair(G[u].dist + 1 + (G[v]-G[t]),v));
 		}
@@ -146,3 +149,9 @@ int aStar(Graph &G, int s, int t){
 
 	return (int)G[t].dist;
 }
+
+
+
+
+
+

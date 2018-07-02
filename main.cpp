@@ -4,32 +4,40 @@
 
 #include <ctime>
 
-int main(){
+int main(int argc, char *argv[]){
 	srand(7); // Used in function generateMaze()
 
-	int n = 100;
-	int m = 131;
+	int n, m; // Maze size
 	int d;
-	time_t begin, end;
+	clock_t begin, end;
 
 	Graph maze;
+
+	if(argc < 3){
+		printf("There are few arguments!\n");
+		return -1;
+	}
+
+	n = atoi(argv[1]);
+	m = atoi(argv[2]);
 
 	maze = generateMaze(n,m);
 	//printMaze(maze,n,m);
 
-	time(&begin);
+	begin = clock();
 	d = dijkstra(maze,0,n*m-1);
-	time(&end);
+	end = clock();
 
 	printf("---- Dijkstra ----\n");
-	printf("Execution time: %.6lf\n", difftime(begin,end));
+	printf("Execution time: %.8f\n", (float)(end - begin)/ CLOCKS_PER_SEC);
 	printf("Shortest path: %d\n\n", d);
 
-	time(&begin);
+	begin = clock();
 	d = aStar(maze,0,n*m-1);
-	time(&end);
+	end = clock();
+
 	printf("---- A* ----\n");
-	printf("Execution time: %.6lf\n", difftime(begin,end));
+	printf("Execution time: %.8f\n", (float)(end - begin)/ CLOCKS_PER_SEC);
 	printf("Shortest path: %d\n", d);
 
 	return 0;
