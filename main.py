@@ -21,18 +21,17 @@ import numpy as np
 			 x >= 0
 
 	GUIDE (from PA-Description):
-	X (a) Ler a entrada
 	
-	X (b) Transforma-la em FPI
+	X (a) Read input
 	
-	(c) Rodar a PL auxiliar para encontrar uma base e verificar se o problema é viável
-	(este passo pode ser pulado caso você identifique uma base óbvia).
+	X (b) Tranform it in standard form
 	
-	(d) Se o problema for viável, rodar o Simplex e ou encontrar a solução ótima, ou
-	verificar que o problema é ilimitado.
+	(c) Run the auxiliar LP to find a base, and verify if it is a feasible problem (this step can be jumped if you find a straightfoward base);
 	
-	(e) Ao final, deve escrever um arquivo de saı́da. Será dado 1 ponto extra para quem
-	incluir certificados no arquivo de saı́da.
+	(d) If the problem is feasible, run Simplex and find the optimal solution, or verify that the problem is unlimited.
+	
+	(e) In the end you must write an output file. One extra point will be given for who include certificates in the output file.
+
 """
 
 def readLP(inp_file):
@@ -65,16 +64,52 @@ def transformFPI(A,c,signals):
 	for i in range(len(signals)):
 		n = A.shape[0]
 		if signals[i] != "==":
-			c = np.hstack((c,np.array([0])))
+			c = np.hstack((c,[0]))
 			
 			v = 1
 			if signals[i] == ">=":
 				v = -1
 			
-			x = np.hstack((np.hstack((np.zeros(i),np.array([v]))) , np.zeros(n-i-1)))
+			x = np.hstack((np.hstack((np.zeros(i),[v])) , np.zeros(n-i-1)))
 			A = np.column_stack((A,x))
 
 	return A,c
+
+# @Parameter T: Tableau
+# @Parameter (x,y): Pair in the matrix A that mut be pivoted
+def pivot(T,x,y):
+
+	T[x,:] *= 1.0/T[x,y] # Transform the pair x,y in 1
+
+	for i in range((T.shape)[0]): # For each line != pivot
+		co = -T[i,y]
+		if i != x:
+			for j in range((T.shape)[1]): # For each column in the tableau
+				T[i,j] += (co*T[x,j])
+
+	return T
+
+def makeCanonical(T,columns):
+
+	# Tableau
+	for i in range(len(columns)):
+		T = pivot(T,i+1,columns[i])
+
+	return T
+
+def simplex(A,b,c,columns):
+	i = 0	
+		
+	T = np.column_stack( (np.vstack((c*-1,A)) , np.hstack(([0],b))) )
+	# columns is the vector with the indexes of a base of LP
+	no_negative = True
+	while(no_negative);
+		for i in range(len((T.shape)[1])-1):
+			# Select a column with negative coeficient in c
+		# Select the max value I can increase the solution
+		# Pivot with the new column
+		# Make T canonical
+
 
 def main():
 
@@ -87,5 +122,6 @@ def main():
 
 	A,b,c,signals = readLP(inp_file)
 	A,c = transformFPI(A,c,signals)
+
 
 main()
