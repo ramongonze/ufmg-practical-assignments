@@ -7,9 +7,9 @@ import numpy as np
 	A = Matrix m x n that represents the constraints
 	b = Vetor of size m that represents the right side of the constraints
 	c = Vector of coeficients
-	x = Vector of solution
+	x = Vector of variables
 
-	The linear programming will be transformed to the standard form:
+	The Linear Programming (LP) will be transformed to the standard form:
 		- Is a maximization problem;
 		- All the constraints are equalities
 		- All the variables are non-negatives
@@ -22,19 +22,22 @@ import numpy as np
 
 	GUIDE (from PA-Description):
 	
-	X (a) Read input
+	X (a) Read input.
 	
-	X (b) Tranform it in standard form
+	X (b) Tranform it in standard form.
 	
-	(c) Run the auxiliar LP to find a base, and verify if it is a feasible problem (this step can be jumped if you find a straightfoward base);
+	(c) Run the auxiliar LP to find a base, and verify if it is a feasible problem (this step can be jumped if you find a straightfoward base).
 	
-	(d) If the problem is feasible, run Simplex and find the optimal solution, or verify that the problem is unlimited.
+	X (d) If the problem is feasible, run Simplex and find the optimal solution, or verify that the problem is unlimited.
 	
 	(e) In the end you must write an output file. One extra point will be given for who include certificates in the output file.
 
 """
 
 def readLP(inp_file):
+	"""
+		@Parameter inp_file: directory and name of the input file with the LP
+	"""
 
 	F = open(inp_file, 'r')
 	m = int(F.readline())
@@ -60,6 +63,11 @@ def readLP(inp_file):
 	return A,b,c,signals
 
 def transformFPI(A,c,signals):
+	"""
+		@Parameter A: Matrix of constraints
+		@Parameter c: Vector of coeficients
+		@Parameter signals: Signals of constraints ("<=",">=" or "==")
+	"""
 
 	for i in range(len(signals)):
 		n = A.shape[0]
@@ -75,9 +83,11 @@ def transformFPI(A,c,signals):
 
 	return A,c
 
-# @Parameter T: Tableau
-# @Parameter (x,y): Pair in the matrix A that mut be pivoted
 def pivot(T,x,y):
+	"""
+		@Parameter T: Tableau
+		@Parameter (x,y): Pair in the tableau T that must be pivoted
+	"""
 
 	T[x,:] *= 1.0/T[x,y] # Transform the pair x,y in 1
 
@@ -90,26 +100,81 @@ def pivot(T,x,y):
 	return T
 
 def makeCanonical(T,columns):
+	"""
+		@Parameter T: Tableau
+		@Parameter columns: Columns that make up a base in the LP
+	"""
 
-	# Tableau
 	for i in range(len(columns)):
 		T = pivot(T,i+1,columns[i])
 
 	return T
 
+def minValue(T,col_index,neg):
+	"""
+		@Parameter T: Tableau
+		@Parameter col_index: Index of a negative value in the vector c of 
+							  coeficients
+		@Parameter neg: Boolean vector corresponding to the column 'col_index'
+						in the tableau T. neg[i] will be False if the value 
+						T[i,col_index] <= 0, or True otherwise.
+	"""
+
+	for v in range(len(neg)):
+		if neg[v] == False:
+			MIN = T[v+1,-1]/T[v+1,col_index]
+			line = v+1
+			break
+
+	for v in range(v+1,len(neg)):
+
+		if neg[v] == False and MIN > T[v+1,-1]/T[v+1,col_index]:
+			MIN = T[v+1,-1]/T[v+1,col_index]
+			line = v+1
+
+	return line
+
 def simplex(A,b,c,columns):
-	i = 0	
+	"""
+		@Parameter columns: The vector with indexes of a base of LP
+		
+		Return value: 
+			- Pair (optminal_solution,x), where optimal_solution is the value 
+			  of the optimal solution for the given LP; x is the vector of 
+			  variables, with their values in the optimal solution.
+
+			- If the LP is unlimited, -1 will be returned.
+	"""
 		
 	T = np.column_stack( (np.vstack((c*-1,A)) , np.hstack(([0],b))) )
-	# columns is the vector with the indexes of a base of LP
 	no_negative = True
-	while(no_negative);
-		for i in range(len((T.shape)[1])-1):
-			# Select a column with negative coeficient in c
-		# Select the max value I can increase the solution
-		# Pivot with the new column
-		# Make T canonical
+	while(no_negative):
+		no_negative = False
+		# Select a column with negative coeficient in c
+		for col_index in range((T.shape)[1]-1):
+			if T[0,col_index] < 0:
+				non_positve = (T[1:,col_index] <= 0)
+				neg = (np.where(non_positve == False))[0]
+				if len(neg) == 0:
+					# Unlimited LP
+					return -1
+				else:
+					no_negative = True
+					line = minValue(T,col_index,non_positve)
+					columns[line-1] = col_index # Swap a column in the base
+					T = makeCanonical(T,columns)
+					break
 
+	x = np.array([])
+	for variable in range((T.shape)[1]-1):
+		if variable not in columns:
+			x = np.hstack((x,[0]))
+		else:
+			x = np.hstack((x,T[list(columns).index(variable)+1,-1]))
+	
+	optminal_solution = T[0,-1]
+
+	return optminal_solution,x
 
 def main():
 
@@ -123,5 +188,7 @@ def main():
 	A,b,c,signals = readLP(inp_file)
 	A,c = transformFPI(A,c,signals)
 
+	columns = [2,3,4]
+	solution,x = simplex(A,b,c,columns)
 
 main()
