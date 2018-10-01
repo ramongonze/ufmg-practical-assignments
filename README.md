@@ -1,6 +1,3 @@
-This is the repository with skeleton source code for DCC605's simple
-shell programming assignment.  Please check the [Google Docs][1]
-with the full assignment.
+#basic-shell
 
- [1]: https://docs.google.com/document/d/14cl6I8xLJD6dnet3fEEFEqtpZkK7TYS4hoq9nBqoKVg/edit?usp=sharing
-
+The goal of this assignment is to implemente a basic shell with some functionalities like cd, cat, ls, and others.
