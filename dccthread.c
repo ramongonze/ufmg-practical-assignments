@@ -1,6 +1,5 @@
 #include "dlist.h"
 #include "dccthread.h"
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -18,24 +17,24 @@ typedef struct dccthread{
 }dccthread_t;
 
 struct dlist *threads_list; // List of threads
-struct dlist *asleep_threads;
-ucontext_t manager;
+struct dlist *asleep_threads; // List of asleep threads
+ucontext_t manager; // 
 
-// Variables for timer
+// Variables for preemption timer
 timer_t timer;
 struct sigevent timer_event;
 struct sigaction timer_action;
 struct itimerspec time_in_CPU;
 
 // Mask used to avoid race condition
-sigset_t mask;
-sigset_t manager_mask;
+sigset_t mask; // Mask for preemption
+sigset_t sleep_mask; // Mask for sleep
 
 // A pointer for the curruent thread
 dccthread_t *current_thread;
 
-/* Check if the thread target is in the thread's list. Return != 0 on success 
- * or 0 otherwise. */
+/* Check if the thread target is in the thread's list or asleep thread's list.
+ * Return != 0 on success or 0 otherwise. */
 int find_thread(dccthread_t *target){
 	if(dlist_empty(threads_list) && dlist_empty(asleep_threads)) return 0;
 	
@@ -50,10 +49,12 @@ int find_thread(dccthread_t *target){
 	return curr != NULL;
 }
 
+// Handler for preemption timer
 static void stop_thread(int sig){
 	dccthread_yield();
 }
 
+// Initialize the preemption timer
 void timer_init(){
 	timer_action.sa_flags = 0;
 	timer_action.sa_handler = stop_thread;
@@ -84,20 +85,22 @@ void dccthread_init(void (*main)(int), int param){
 	sigprocmask(SIG_SETMASK, &mask, NULL);	
 
 	// Create mask for sleep
-	sigemptyset(&manager_mask);
-	sigaddset(&manager_mask, SIGSLEEP);
+	sigemptyset(&sleep_mask);
+	sigaddset(&sleep_mask, SIGSLEEP);
 
 	manager.uc_sigmask = mask;
 	
 	timer_init();
 
 	while(!dlist_empty(threads_list) || !dlist_empty(asleep_threads)){
-		// If all threads are asleep, unblock and block the sleep signal until some thread wake up.
-		sigprocmask(SIG_UNBLOCK, &manager_mask, NULL);
-		sigprocmask(SIG_BLOCK, &manager_mask, NULL);
+		/* If all threads are asleep, unblock and block the sleep signal to 
+		 * get some thread that woke up. */
+		sigprocmask(SIG_UNBLOCK, &sleep_mask, NULL);
+		sigprocmask(SIG_BLOCK, &sleep_mask, NULL);
 
 		current_thread = (dccthread_t *) dlist_pop_left(threads_list);
 
+		// Check if a thread is waiting for another one
 		if(current_thread->waiting != NULL){
 			if(find_thread(current_thread->waiting)){
 				dlist_push_right(threads_list, current_thread);
@@ -170,6 +173,7 @@ int cmp(const void *e1, const void *e2, void *userdata){
 	return (dccthread_t *)e1 != (dccthread_t *)e2;
 }
 
+// Handler for sleep timer. Take the thread back to thread's list.
 void back_to_threads_list(int sig, siginfo_t *si, void *uc){
 	dlist_find_remove(asleep_threads, (dccthread_t *)si->si_value.sival_ptr, cmp, NULL);
 	dlist_push_right(threads_list, (dccthread_t *)si->si_value.sival_ptr);
