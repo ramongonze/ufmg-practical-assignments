@@ -1,20 +1,9 @@
 #ifndef __DCCTHREAD_HEADER__
 #define __DCCTHREAD_HEADER__
 
-#include <signal.h>
 #include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ucontext.h>
 
-typedef struct dccthread{
-	struct dccthread *waiting; /* Pointer to the thread that this thread have
-	                            * to wait for. It is NULL if this thread does
-	                            * not have to wait for any other thread. */
-	const char *name;
-	ucontext_t context;
-}dccthread_t;
+typedef struct dccthread dccthread_t;
 
 #define DCCTHREAD_MAX_NAME_SIZE 256
 #define THREAD_STACK_SIZE (1<<16)
