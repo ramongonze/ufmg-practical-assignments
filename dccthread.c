@@ -73,52 +73,31 @@ void dccthread_init(void (*main)(int), int param){
 	threads_list = dlist_create();
 	asleep_threads = dlist_create();
 
-	timer_init();
+	dccthread_create("main", main, param);
 
 	getcontext(&manager);
 
-	// Create the mask for signals
+	// Create mask for signals
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGPREEMPTION);
 	sigaddset(&mask, SIGSLEEP);
-	sigprocmask(SIG_SETMASK, &mask, NULL);
-	// manager.uc_sigmask = mask;	
+	sigprocmask(SIG_SETMASK, &mask, NULL);	
 
+	// Create mask for sleep
 	sigemptyset(&manager_mask);
 	sigaddset(&manager_mask, SIGSLEEP);
-	sigprocmask(SIG_SETMASK, &manager_mask, NULL);
 
 	manager.uc_sigmask = mask;
-	sigprocmask(SIG_BLOCK, &mask, NULL);
 	
-	dccthread_t *t;
-	dccthread_create("main", main, param);
+	timer_init();
+
 	while(!dlist_empty(threads_list) || !dlist_empty(asleep_threads)){
 		// If all threads are asleep, unblock and block the sleep signal until some thread wake up.
 		sigprocmask(SIG_UNBLOCK, &manager_mask, NULL);
 		sigprocmask(SIG_BLOCK, &manager_mask, NULL);
 
-		printf("------------------\n");
-		struct dnode *aux = threads_list->head;
-		while(aux != NULL){
-			t = (dccthread_t *)aux->data;
-			printf("%s | ", t->name);
-			aux = aux->next;
-		}printf("\nSLEEP: ");
-
-		aux = asleep_threads->head;
-		while(aux != NULL){
-			t = (dccthread_t *)aux->data;
-			printf("%s | ", t->name);
-			aux = aux->next;
-		}printf("\n");
-		printf("------------------\n");
-		
 		current_thread = (dccthread_t *) dlist_pop_left(threads_list);
-		// printf("current thread: |%s| -- qtd threads: %d\n", current_thread->name, threads_list->count);
-		
 
-		// Check if the thread is waiting for another one
 		if(current_thread->waiting != NULL){
 			if(find_thread(current_thread->waiting)){
 				dlist_push_right(threads_list, current_thread);
@@ -127,9 +106,7 @@ void dccthread_init(void (*main)(int), int param){
 				current_thread->waiting = NULL;
 			}
 		}
-		// 	printf("not waiting\n");
 		swapcontext(&manager,&(current_thread->context));
-		sigprocmask(SIG_BLOCK, &manager_mask, NULL);
 	}
 
 	exit(EXIT_SUCCESS);
@@ -190,14 +167,12 @@ void dccthread_wait(dccthread_t *tid){
 }
 
 int cmp(const void *e1, const void *e2, void *userdata){
-	return (dccthread_t *)e1 == (dccthread_t *)e2;
+	return (dccthread_t *)e1 != (dccthread_t *)e2;
 }
 
 void back_to_threads_list(int sig, siginfo_t *si, void *uc){
-	sigprocmask(SIG_BLOCK, &mask, NULL);
 	dlist_find_remove(asleep_threads, (dccthread_t *)si->si_value.sival_ptr, cmp, NULL);
 	dlist_push_right(threads_list, (dccthread_t *)si->si_value.sival_ptr);
-	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 }
 
 /* `dccthread_sleep` stops the current thread for the time period
@@ -214,22 +189,21 @@ void dccthread_sleep(struct timespec ts){
 	t_sleep_act.sa_flags = SA_SIGINFO;
 	t_sleep_act.sa_sigaction = back_to_threads_list;
 	t_sleep_act.sa_mask = mask;
-	sigemptyset(&(t_sleep_act.sa_mask));
 	sigaction(SIGSLEEP, &t_sleep_act, NULL);
 
 	t_sleep_event.sigev_notify = SIGEV_SIGNAL;
-	t_sleep_event.sigev_signo = SIGPREEMPTION;
+	t_sleep_event.sigev_signo = SIGSLEEP;
 	t_sleep_event.sigev_value.sival_ptr = current_thread;
 	timer_create(CLOCK_REALTIME, &t_sleep_event, &t_sleep);
 
 	time_out_CPU.it_value = ts;
 	time_out_CPU.it_interval.tv_sec = 0;
 	time_out_CPU.it_interval.tv_nsec = 0;
-	timer_settime(timer, 0, &time_out_CPU, NULL);
+	timer_settime(t_sleep, 0, &time_out_CPU, NULL);
 
 	dlist_push_right(asleep_threads,current_thread);
 
-	setcontext(&manager);
+	swapcontext(&(current_thread->context), &manager);
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 }
 
