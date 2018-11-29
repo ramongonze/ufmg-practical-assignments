@@ -1,0 +1,6 @@
+dir
+mv ~/test7* .
+dir
+chmod 755 test7.sh
+code -r .
+cd ..
