@@ -1,0 +1,7 @@
+referencias
+
+Wikipedia. stat (system call). Disponível em: <https://en.wikipedia.org/wiki/Stat_(system_call)>. Acesso em: 29 nov. de 2018.
+Wikipedia. Nó-i. Disponível em: <https://pt.wikipedia.org/wiki/N%C3%B3-i>. Acesso em: 29 nov. de 2018.
+Code Wiki. open (C System Call). Disponível em: <http://codewiki.wikidot.com/c:system-calls:open>. Acesso em: 29 nov. de 2018.
+Code Wiki. close (C System Call). Disponível em: <http://codewiki.wikidot.com/c:system-calls:close>. Acesso em: 29 nov. de 2018.
+. . Disponível em: <>. Acesso em: 29 nov. de 2018.

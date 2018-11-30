@@ -69,14 +69,14 @@ struct superblock * fs_format(const char *fname, uint64_t blocksize){
 		return NULL;
 	}
 
-	// Set the root directory
+	// Set the root directory (we are writing in the second block)
 	nodei = (struct nodeinfo*) malloc(sb->blksz);
 	nodei->size = 0;
 	strcpy(nodei->name, "/\0");
 	write(sb->fd, nodei, sb->blksz);
 	free(nodei);
 
-	// Fill attributes of root iNode
+	// Fill attributes of root iNode (we are writing in the third block of fs)
 	in.mode = IMDIR;
 	in.parent = 0;
 	in.next = 0;
@@ -220,8 +220,9 @@ int fs_put_block(struct superblock *sb, uint64_t block){
 	return 0;
 }
 
-// int fs_write_file(struct superblock *sb, const char *fname, char *buf,
-//                   size_t cnt);
+int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cnt){
+
+}
 
 // ssize_t fs_read_file(struct superblock *sb, const char *fname, char *buf,
 //                      size_t bufsz);
