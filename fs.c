@@ -13,6 +13,7 @@
 #define MAX_NAME 100 // Max files' name
 #define MAX_SUBFOLDERS 100 // Max number of subfolders in a path
 #define MAX_FILE_SIZE 5000 // Max file size (in blocks)
+#define MAX_PATH_NAME 4000// Max length of a path's name
 
 struct superblock * fs_format(const char *fname, uint64_t blocksize){
 	long int size;
@@ -228,14 +229,14 @@ int fs_put_block(struct superblock *sb, uint64_t block){
 int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cnt){
 	int i, j, k, current_allocated_blocks;
 	int blocks[MAX_FILE_SIZE];
-	int num_elements_in_panth, num_new_blocks, new_file;
+	int num_elements_in_path, num_new_blocks, new_file;
 	char files[MAX_SUBFOLDERS][MAX_NAME];
 	char *token;
-	char *name, c;
-	struct inode in, in2, new_in;
-	struct nodeinfo info, info2, new_info;
-	uint64_t new_block;
+	char *name;
+	struct inode in, in2;
+	struct nodeinfo info, info2;
 
+	name = (char*) malloc(MAX_PATH_NAME*sizeof(char));
 	strcpy(name, fname);
 
 	// Separate the subfolders in a vector of strings
@@ -246,7 +247,7 @@ int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cn
 		token = strtok(NULL, "/");
 		i++;
 	}
-	num_elements_in_panth = i;
+	num_elements_in_path = i;
 
 	// Root iNode
 	lseek(sb->fd, sb->root*sb->blksz, SEEK_SET);
@@ -257,7 +258,7 @@ int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cn
 	read(sb->fd, &info, sb->blksz);
 
 	// Go trought every folder in the path, until reach the file, if it exists
-	for(j = 0; j < num_elements_in_panth; j++){
+	for(j = 0; j < num_elements_in_path; j++){
 		// Check every element inside the current directory
 		while(1){
 			// Check if the element is in the current inode
@@ -282,33 +283,39 @@ int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cn
 				}
 			}
 
-			if(strcmp(info2.name, files[j]) != 0 && j == (num_elements_in_panth-1)){
-				// Create new file
+			if(strcmp(info2.name, files[j]) == 0){
+				// The subfolder or file has been found in the current inode
+				if(j == (num_elements_in_path-1)){
+					// The file has been found
+					blocks[0] = in2.meta;
+					blocks[1] = in.links[k];
+					new_file = 0;
+				}
+
+				break;
+			}else{
+				// The subfolder or file has not been found in the current inode
 				
-				// New nodeinfo
-				blocks[0] = fs_get_block(sb);
-				strcpy(info2.name, files[j]);
-				info2.size = sb->blksz - 20;
+				if(j == (num_elements_in_path-1)){
+					// The file does not exists. Create a new file
+				
+					// New nodeinfo
+					blocks[0] = fs_get_block(sb);
+					strcpy(info2.name, files[j]);
+					info2.size = sb->blksz - 20;
 
-				// New inode
-				blocks[1] = fs_get_block(sb);
-				in2.meta = blocks[0];
-				in2.next = 0;
+					// New inode
+					blocks[1] = fs_get_block(sb);
+					in2.meta = blocks[0];
+					in2.next = 0;
 
-				new_file = 1;
-				break;
-			}else if(strcmp(info2.name, files[j]) != 0 && in.next == 0){
-				errno = ENOENT;
-				return -1;
-			}
-
-			if(in.next == 0){
-				// If the program arrives here, it has found the file, and it already exists
-				blocks[0] = in2.meta;
-				blocks[1] = in.links[k];
-
-				new_file = 0;
-				break;
+					new_file = 1;
+					break;
+				}else if(in.next == 0){
+					// No such directory
+					errno = ENOENT;
+					return -1;
+				}
 			}
 
 			// Jump to the next inode
@@ -427,4 +434,122 @@ int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cn
 
 // int fs_rmdir(struct superblock *sb, const char *dname);
 
-// char * fs_list_dir(struct superblock *sb, const char *dname);
+char * fs_list_dir(struct superblock *sb, const char *dname){
+	
+	int i, j, k, pos;
+	int num_elements_in_path;
+	char files[MAX_SUBFOLDERS][MAX_NAME];
+	char *token;
+	char *name, *elements;
+	struct inode in, in2;
+	struct nodeinfo info, info2;
+
+	name = (char*) malloc(MAX_PATH_NAME*sizeof(char));
+	strcpy(name, dname);
+
+	// Separate the subfolders in a vector of strings
+	i = 0;
+	token = strtok(name, "/"); // Root
+	while(token != NULL){
+		strcpy(files[i], token);
+		token = strtok(NULL, "/");
+		i++;
+	}
+	num_elements_in_path = i;
+	free(name);
+
+	// Root iNode
+	lseek(sb->fd, sb->root*sb->blksz, SEEK_SET);
+	read(sb->fd, &in, sb->blksz);
+
+	// Root nodeinfo
+	lseek(sb->fd, sb->blksz, SEEK_SET);
+	read(sb->fd, &info, sb->blksz);
+
+	// Go trought every folder in the path, until reach the file, if it exists
+	for(j = 0; j < num_elements_in_path; j++){
+		// Check every element inside the current directory
+		while(1){
+			// Check if the element is in the current inode
+			for(k = 0; k < info.size; k++){
+				// Inode of a file
+				lseek(sb->fd, in.links[k]*sb->blksz, SEEK_SET);
+				read(sb->fd, &in2, sb->blksz);
+			
+				// Check if we are in a child inode
+				if(in2.mode == IMCHILD){
+					// Jump to the first inode
+					lseek(sb->fd, in2.parent*sb->blksz, SEEK_SET);
+					read(sb->fd, &in2, sb->blksz);
+				}
+				
+				// Get the file's nodeinfo
+				lseek(sb->fd, in2.meta*sb->blksz, SEEK_SET);
+				read(sb->fd, &info2, sb->blksz);
+
+				if(strcmp(info2.name, files[j]) == 0){
+					break;
+				}
+			}
+
+			if(strcmp(info2.name, files[j]) == 0){
+				// The subfolder or file has been found in the current inode
+				break;
+			}else if(j == (num_elements_in_path-1) || in.next == 0){
+				// The directory has not been found
+				errno = ENOENT;
+				elements = (char*) malloc(3*sizeof(char));
+				strcpy(elements, "-1");
+				return elements;
+			}
+
+			// Jump to the next inode
+			lseek(sb->fd, in.next*sb->blksz, SEEK_SET);
+			read(sb->fd, &in, sb->blksz);
+		}
+
+		// Jump to the next directory
+		info = info2;
+		in = in2;
+	}
+
+	elements = (char*) malloc(MAX_PATH_NAME*sizeof(char));
+	pos = 0;
+	elements[0] = '\0';
+	for(i = 0; i < info.size; i++){
+		// Inode of a file
+		lseek(sb->fd, in.links[i]*sb->blksz, SEEK_SET);
+		read(sb->fd, &in2, sb->blksz);
+	
+		// Check if we are in a child inode
+		if(in2.mode == IMCHILD){
+			// Jump to the first inode
+			lseek(sb->fd, in2.parent*sb->blksz, SEEK_SET);
+			read(sb->fd, &in2, sb->blksz);
+		}
+		
+		// Get the file's nodeinfo
+		lseek(sb->fd, in2.meta*sb->blksz, SEEK_SET);
+		read(sb->fd, &info2, sb->blksz);
+
+		strcpy((elements+pos), info.name);
+		pos += strlen(info.name);
+
+		if(in2.mode == IMDIR){
+			// It is a directory
+			elements[pos] = '/';
+			elements[pos+1] = '\0';
+			pos++;
+		}
+
+		if(i < info.size-1){
+			elements[pos] = ' ';
+			elements[pos+1] = '\0';
+			pos++;
+		}
+	}
+
+	// elements = realloc(elements, pos*sizeof(char));
+
+	return elements;
+}
