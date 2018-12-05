@@ -228,7 +228,7 @@ int fs_put_block(struct superblock *sb, uint64_t block){
 
 int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cnt){
 	int i, j, k, current_allocated_blocks;
-	int blocks[MAX_FILE_SIZE];
+	uint64_t blocks[MAX_FILE_SIZE];
 	int num_elements_in_path, num_new_blocks, new_file;
 	char files[MAX_SUBFOLDERS][MAX_NAME];
 	char *token;
@@ -434,7 +434,7 @@ int fs_mkdir(struct superblock *sb, const char *dname){
 	
 	int i, j, k;
 	int num_elements_in_path;
-	int blocks[MAX_FILE_SIZE];
+	uint64_t blocks[MAX_FILE_SIZE];
 	uint64_t block_info, block_inode;
 	char files[MAX_SUBFOLDERS][MAX_NAME];
 	char *token;
@@ -552,7 +552,132 @@ int fs_mkdir(struct superblock *sb, const char *dname){
 	return 0;
 }
 
-// int fs_rmdir(struct superblock *sb, const char *dname);
+int fs_rmdir(struct superblock *sb, const char *dname){
+
+	int i, j, k;
+	int num_elements_in_path;
+	uint64_t blocks[MAX_FILE_SIZE], block_in_parent, block_info_parent;
+	char files[MAX_SUBFOLDERS][MAX_NAME];
+	char *token;
+	char *name;
+	struct inode in, in2, parent_in;
+	struct nodeinfo info, info2, parent_info;
+
+	name = (char*) malloc(MAX_PATH_NAME*sizeof(char));
+	strcpy(name, dname);
+
+	// Separate the subfolders in a vector of strings
+	i = 0;
+	token = strtok(name, "/"); // Root
+	while(token != NULL){
+		strcpy(files[i], token);
+		token = strtok(NULL, "/");
+		i++;
+	}
+	num_elements_in_path = i;
+	free(name);
+
+	// Root iNode
+	lseek(sb->fd, sb->root*sb->blksz, SEEK_SET);
+	read(sb->fd, &in, sb->blksz);
+
+	// Root nodeinfo
+	lseek(sb->fd, sb->blksz, SEEK_SET);
+	read(sb->fd, &info, sb->blksz);
+
+	block_info_parent = 1; // Root ndoeinfo
+	block_in_parent = 2; // Root inode
+	// Go trought every folder in the path, until reach the file, if it exists
+	for(j = 0; j < num_elements_in_path; j++){
+		// Check every element inside the current directory
+		while(1){
+			// Check if the element is in the current inode
+			for(k = 0; k < info.size; k++){
+				// Inode of a file
+				lseek(sb->fd, in.links[k]*sb->blksz, SEEK_SET);
+				read(sb->fd, &in2, sb->blksz);
+			
+				// Check if we are in a child inode
+				if(in2.mode == IMCHILD){
+					// Jump to the first inode
+					lseek(sb->fd, in2.parent*sb->blksz, SEEK_SET);
+					read(sb->fd, &in2, sb->blksz);
+				}
+				
+				// Get the file's nodeinfo
+				lseek(sb->fd, in2.meta*sb->blksz, SEEK_SET);
+				read(sb->fd, &info2, sb->blksz);
+
+				if(strcmp(info2.name, files[j]) == 0){
+					break;
+				}
+			}
+
+			if(strcmp(info2.name, files[j]) == 0){
+				// The subfolder or file has been found in the current inode
+				if(j == (num_elements_in_path-1)){
+					blocks[0] = in2.meta;
+					blocks[1] = in.links[k];
+				}else{
+					block_info_parent = in2.meta;
+					block_in_parent = in.links[k];
+				}
+				break;
+			}else if(j == (num_elements_in_path-1) || in.next == 0){
+				// The directory has not been found
+				errno = ENOENT;
+				return -1;
+			}
+
+			// Jump to the next inode
+			lseek(sb->fd, in.next*sb->blksz, SEEK_SET);
+			read(sb->fd, &in, sb->blksz);
+		}
+
+		// Save information about the previous directory
+		parent_info = info;
+		parent_in = in;
+
+		// Jump to the next directory
+		info = info2;
+		in = in2;
+	}
+
+	// Check if the directory is empty
+	if(info.size > 0){
+		errno = ENOTEMPTY;
+		return -1;
+	}
+
+	// Free blocks of directory's nodeinfo and inode
+	fs_put_block(sb, blocks[0]);
+	fs_put_block(sb, blocks[1]);
+
+	// Remove the deleted directory from his parent links
+	for(i = 0; i < parent_info.size; i++){
+		if(parent_in.links[i] == blocks[1]){
+			while(i < parent_info.size-1){
+				parent_in.links[i] = parent_in.links[i+1];
+				i++;
+			}
+			break;
+		}
+	}
+
+	// Update parent's directory info
+	lseek(sb->fd, block_in_parent*sb->blksz, SEEK_SET);
+	write(sb->fd, &parent_in, sb->blksz);
+
+	parent_info.size--;
+	lseek(sb->fd, block_info_parent*sb->blksz, SEEK_SET);
+	write(sb->fd, &parent_info, sb->blksz);
+
+	// Write superblock updated
+	lseek(sb->fd, 0, SEEK_SET);
+	write(sb->fd, sb, sb->blksz);	
+
+	return 0;
+}
 
 char * fs_list_dir(struct superblock *sb, const char *dname){
 	
