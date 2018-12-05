@@ -7,7 +7,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/file.h>
+#include <math.h>
 #include "fs.h"
+
+#define MAX_NAME 100 // Max files' name
+#define MAX_SUBFOLDERS 100 // Max number of subfolders in a path
+#define MAX_FILE_SIZE 5000 // Max file size (in blocks)
 
 struct superblock * fs_format(const char *fname, uint64_t blocksize){
 	long int size;
@@ -221,7 +226,196 @@ int fs_put_block(struct superblock *sb, uint64_t block){
 }
 
 int fs_write_file(struct superblock *sb, const char *fname, char *buf, size_t cnt){
+	int i, j, k, current_allocated_blocks;
+	int blocks[MAX_FILE_SIZE];
+	int num_elements_in_panth, num_new_blocks, new_file;
+	char files[MAX_SUBFOLDERS][MAX_NAME];
+	char *token;
+	char *name, c;
+	struct inode in, in2, new_in;
+	struct nodeinfo info, info2, new_info;
+	uint64_t new_block;
 
+	strcpy(name, fname);
+
+	// Separate the subfolders in a vector of strings
+	i = 0;
+	token = strtok(name, "/"); // Root
+	while(token != NULL){
+		strcpy(files[i], token);
+		token = strtok(NULL, "/");
+		i++;
+	}
+	num_elements_in_panth = i;
+
+	// Root iNode
+	lseek(sb->fd, sb->root*sb->blksz, SEEK_SET);
+	read(sb->fd, &in, sb->blksz);
+
+	// Root nodeinfo
+	lseek(sb->fd, sb->blksz, SEEK_SET);
+	read(sb->fd, &info, sb->blksz);
+
+	// Go trought every folder in the path, until reach the file, if it exists
+	for(j = 0; j < num_elements_in_panth; j++){
+		// Check every element inside the current directory
+		while(1){
+			// Check if the element is in the current inode
+			for(k = 0; k < info.size; k++){
+				// Inode of a file
+				lseek(sb->fd, in.links[k]*sb->blksz, SEEK_SET);
+				read(sb->fd, &in2, sb->blksz);
+			
+				// Check if we are in a child inode
+				if(in2.mode == IMCHILD){
+					// Jump to the first inode
+					lseek(sb->fd, in2.parent*sb->blksz, SEEK_SET);
+					read(sb->fd, &in2, sb->blksz);
+				}
+				
+				// Get the file's nodeinfo
+				lseek(sb->fd, in2.meta*sb->blksz, SEEK_SET);
+				read(sb->fd, &info2, sb->blksz);
+
+				if(strcmp(info2.name, files[j]) == 0){
+					break;
+				}
+			}
+
+			if(strcmp(info2.name, files[j]) != 0 && j == (num_elements_in_panth-1)){
+				// Create new file
+				
+				// New nodeinfo
+				blocks[0] = fs_get_block(sb);
+				strcpy(info2.name, files[j]);
+				info2.size = sb->blksz - 20;
+
+				// New inode
+				blocks[1] = fs_get_block(sb);
+				in2.meta = blocks[0];
+				in2.next = 0;
+
+				new_file = 1;
+				break;
+			}else if(strcmp(info2.name, files[j]) != 0 && in.next == 0){
+				errno = ENOENT;
+				return -1;
+			}
+
+			if(in.next == 0){
+				// If the program arrives here, it has found the file, and it already exists
+				blocks[0] = in2.meta;
+				blocks[1] = in.links[k];
+
+				new_file = 0;
+				break;
+			}
+
+			// Jump to the next inode
+			lseek(sb->fd, in.next*sb->blksz, SEEK_SET);
+			read(sb->fd, &in, sb->blksz);
+		}
+
+		// Jump to the next directory
+		info = info2;
+		in = in2;
+	}
+
+	// Write the nodeinfo
+	lseek(sb->fd, blocks[0]*sb->blksz, SEEK_SET);
+	write(sb->fd, &info, sb->blksz);			
+
+
+	// blocks[0] = Contains the block of the nodeinfo
+	// blocks[1] = Contains the block of the first inode
+
+	if(new_file){
+		// Number of blocks required to write =buf
+		num_new_blocks = ceil(((float)cnt)/(sb->blksz-20.0));
+
+		// Get new blocks, if necessary
+		for(i = 0; i < num_new_blocks-1; i++){
+			blocks[i+2] = fs_get_block(sb);
+		}
+
+	}else{
+		current_allocated_blocks = ceil(((float)info.size)/(sb->blksz-20.0));
+		num_new_blocks = ceil(((float)cnt)/(sb->blksz-20.0));
+		
+		if(current_allocated_blocks < num_new_blocks || current_allocated_blocks == num_new_blocks){
+			i = 2;
+			in2 = in;
+			while(in2.next != 0){
+				blocks[i] = in.next;
+				lseek(sb->fd, blocks[i]*sb->blksz, SEEK_SET);
+				read(sb->fd, &in2, sb->blksz);
+				i++;
+			}
+
+			// Get the rest of blocks
+			for(i = current_allocated_blocks+1; i <= num_new_blocks; i++){
+				blocks[i] = fs_get_block(sb);
+			}
+
+		}else{
+			// There are more inodes than the necessary
+			i = 2;
+			in2 = in;
+			while(in2.next != 0){
+				blocks[i] = in.next;
+				lseek(sb->fd, blocks[i]*sb->blksz, SEEK_SET);
+				read(sb->fd, &in2, sb->blksz);
+				i++;
+			}
+
+			// Free the excess blocks 
+			for(i = current_allocated_blocks; i > num_new_blocks; i--){
+				if(fs_put_block(sb, blocks[i]) != 0){
+					return -1;
+				}
+			}
+		}
+	}
+
+
+	// Write the first inode
+	in.mode = IMREG;
+	in.parent = blocks[1];
+	in.meta = blocks[0];
+	if(num_new_blocks == 1){
+		in.next = 0;
+	}else{
+		in.next = blocks[2];
+	}
+
+	lseek(sb->fd, blocks[1]*sb->blksz, SEEK_SET);
+	write(sb->fd, &in, sb->blksz);
+
+	// Write the inodes children, if there is anyone
+	in.mode = IMCHILD;
+	in.parent = blocks[1];
+
+	// Write the buffer in all inodes, according to number of blocks in vector =blocks
+	for(i = 2; i <= num_new_blocks; i++){
+		// Write the nodeinfo
+		in.meta = blocks[i-1];
+		if(i < num_new_blocks){
+			in.next = blocks[i+1];					
+		}else{
+			in.next = 0;
+		}
+	
+		lseek(sb->fd, blocks[i]*sb->blksz, SEEK_SET);
+		write(sb->fd, &in, sb->blksz);			
+	}	
+
+	// Update sb
+	lseek(sb->fd, 0, SEEK_SET);
+	if(write(sb->fd, sb, sb->blksz) < 0){
+		return -1;
+	}
+
+	return 0;
 }
 
 // ssize_t fs_read_file(struct superblock *sb, const char *fname, char *buf,
