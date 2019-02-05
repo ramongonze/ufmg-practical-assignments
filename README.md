@@ -1,4 +1,4 @@
-Information of the work available in *Report.pdf*.
+Information about the work available in *Report.pdf*.
 
 # References
 
