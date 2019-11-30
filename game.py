@@ -100,12 +100,15 @@ class TikTakToe(tk.Frame):
             else:
                 self.player = 1 + (self.player%2)    
 
-def main():
+def run():
     root = tk.Tk()
     game = TikTakToe(root)
     game.pack()
     tk.messagebox.showinfo("TikTakToe","Welcome to tiktaktoe! Player 1 is X and Player 2 is O")
-    root.mainloop()    
+    root.mainloop()
+
+def main():
+    run()
 
 if __name__ == "__main__":
     main()
