@@ -19,10 +19,10 @@ class Server:
 		self.dataSize = dataSize
 		self.players = [] # List to keep players' connection
 		self.matchStarted = False
-		sock.bind((ip, port))
-		sock.listen(nClients)
+		self.sock.bind((ip, port))
+		self.sock.listen(nClients)
 
-	def getMessage(connection, address):
+	def getMessage(self, connection, address):
 		"""
 			A handler used by a new thread created due to a new connection between server and client.
 
@@ -34,35 +34,39 @@ class Server:
 
 		while True:
 			data = connection.recv(self.dataSize)
-			
+			print('[On server]: ' + str(data))
+			for p in self.players:
+				p.send(bytes(data))
 			if not data:
 				self.players.remove(connection)
 				connection.close()
 				break
 
-	while True:
-		connection, address = sock.accept()
-		
-		# After making a new connection, we create a new thread
-		cThread = threading.Thread(target=getMessage, args=(connection, address))
-		cThread.daemon = True # Program becomes able to exit even if many thread are being executed
-		cThread.start()
-		self.players.append(connection) # Add the new player's connection to the list of players
+	def run(self):
+		while True:
+			connection, address = self.sock.accept()
+			# connection.send(bytes('olaaa'))
+			# After making a new connection, we create a new thread
+			cThread = threading.Thread(target=self.getMessage, args=(connection, address))
+			cThread.daemon = True # Program becomes able to exit even if many thread are being executed
+			cThread.start()
+			self.players.append(connection) # Add the new player's connection to the list of players
 
-		if len(self.players) == 2:
+			# if len(self.players) == 2:
 
-			if not matchStarted:
-				# Start a new match
+			# 	if not matchStarted:
+			# 		# Start a new match
 
-			else:
-				
+			# 	else:
 
-def main()
-	port = 77777
+
+def main():
+	port = 65000
 	nPlayers = 2
 	dataSize = 1024
 
 	# Create a new server
-	Server S(port, nPlayers, dataSize)
+	S = Server(port, nPlayers, dataSize)
+	S.run()
 
 main()
