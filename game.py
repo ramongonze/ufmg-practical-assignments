@@ -4,7 +4,6 @@ from tkinter import messagebox
 
 class TikTakToe(tk.Frame):
     def __init__(self, parent, rows=3, board_size=3, size=256):
-
         self.parent = parent
         self.rows = rows
         self.board_size = board_size
@@ -29,7 +28,11 @@ class TikTakToe(tk.Frame):
                 y2 = y1 + self.size
                 self.canvas.create_rectangle(x1, y1, x2, y2, outline="black", tags='square')
         
-                
+    def restart(self):
+        self.destroy()
+        self.__init__(self.parent)
+        self.pack()      
+
     def winner(self):
         won =  np.full((self.board_size),self.player)
 
@@ -40,6 +43,12 @@ class TikTakToe(tk.Frame):
             if(np.array_equal(self.board[i], won)): return 1
             if(np.array_equal(self.board[:,i], won)): return 1
 
+        if(not(0 in self.board)):
+            if(messagebox.askyesno("Draw!","Draw! Want to play again?".format(self.player))):
+                self.restart()
+                self.player = 1 + (self.player%2)
+            else:
+                exit()
 
     def click(self, event):
         x0, y0 = int(event.x/self.size), int(event.y/self.size)
@@ -59,13 +68,11 @@ class TikTakToe(tk.Frame):
 
         if(self.winner()):
             if(messagebox.askyesno("We have a winner!","Player {} won! Want to play again?".format(self.player))):
-                self.destroy()
-                self.__init__(self.parent)
-                self.pack()
-
+                self.restart()
             else:
                 exit()
-        self.player = 1 + (self.player%2)    
+        else:
+            self.player = 1 + (self.player%2)    
 
 def main():
     root = tk.Tk()
