@@ -13,7 +13,6 @@ class TikTakToe(tk.Frame):
         size = size of the each row in pixels.
         """
         self.parent = parent
-        self.rows = rows
         self.board_size = board_size
         self.size = size
         self.player = 1
