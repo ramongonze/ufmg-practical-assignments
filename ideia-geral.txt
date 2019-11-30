@@ -1,0 +1,27 @@
+Ideia geral:
+
+game.py:
+    - Cria a interface do jogo;
+    - Contém regras do jogo, com funções que testam validade de jogadas, modificam o estado atual, iniciam/reiniciam partidas, etc.
+
+server.py:
+	- Arquivo que será executado no pc servidor.
+	- Não abre interface.
+	- Fica esperando dois jogadores entrarem para iniciar uma partida.
+	- Matém o estado atual do jogo.
+	- Recebe as jogadas dos players e modifica o estado atual do jogo.
+	- Sempre que modificar o estado atual, manda uma mensagem para os dois clientes conectados.
+	- Quando for a vez do jogador X, enviar mensagem para o jogador X avisando que é a jogada dele.
+	- Quando alguém ganhar ou der empate, enviar mensagem com o resultado para ambos e perguntar se querem começar outra partida.
+		- Se ambos quiserem começar outra partida, só chama a função server.restart().
+		- Caso um dos dois não queira (ou os dois), encerra ambas as conexões, exibindo mensagens.
+
+
+client.py:
+	- Arquivo que será executado nos pcs clientes.
+	- Abre a interface do jogo.
+	- Assim que o arquivo for aberto, faz uma requisição para o servidor e fica aguardando outro player entrar.
+		- Acho interessante colocar mensagens de "Conectado com sucesso", "Aguardando jogador".
+	- Quando uma partida começar, a tela do jogador deve sempre conter uma das seguintes mensagens: "Sua vez" ou "Vez do outro jogador".
+	- Quando NÃO for a vez do jogador (o servidor que avisa de quem é a vez), qualquer clique na tela NÃO deve enviar nada para o servidor.
+	- Quando FOR a vez do jogador, assim que ele clicar em uma célula, verificar se a jogada é válida, e se for, enviar mensagem para o servidor com a jogada feita.
