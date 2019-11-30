@@ -46,7 +46,7 @@ class TikTakToe(tk.Frame):
 
     def winner(self):
         """
-        Check if there is a winner of a draw.
+        Check if there is a winner or a draw.
 
         Return:
         1 -- If there is a winner
