@@ -37,8 +37,10 @@ class TikTakToe(tk.Frame):
 
 	def getMessage(self):
 		while True:
+			print('on the loop', end='\r')
 			data = self.sock.recv(2048).decode('utf-8')
 			if not data:
+				print('nodata')
 				self.sock.close()
 				break
 
@@ -54,12 +56,15 @@ class TikTakToe(tk.Frame):
 				tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 2 - O")
 				self.parent.title("TikTakToe - Player " + str(self.player))
 			elif(message == P1_MUST_PLAY or message == P2_MUST_PLAY):
+				print('ddes')
 				self.draw(x, y, message, turn)
 			elif(message == PLAY_AGAIN):
 				print('play again t')
 				if(self.play_again == 1):
 					print('pg 1')
 					self.restart()
+				else:
+					break
 			elif(message == EXIT_GAME):
 				break		
 			else:
@@ -71,11 +76,13 @@ class TikTakToe(tk.Frame):
 					text = "Draw! Want to play again?"
 
 				if(messagebox.askyesno("Match is over!", text)):
+					self.play_again = 1
 					self.sock.send(bytes('%d%d'%(PLAY_AGAIN, self.player), encoding='utf-8'))
 				else:
 					self.sock.send(bytes('%d%d'%(EXIT_GAME, self.player), encoding='utf-8'))
 					break
 
+		
 
 	def initGame(self, parent):
 		"""
@@ -108,7 +115,10 @@ class TikTakToe(tk.Frame):
 		"""
 		print('restart')
 		self.destroy()
-		self.run(self.parent) 
+		self.initGame(self.parent)
+		self.board = np.zeros((self.board_size,self.board_size))
+		self.turn = self.player%2
+		self.pack()
 
 	def draw(self, x0, y0, message, turn):
 		fig_size = self.size/3
@@ -138,9 +148,11 @@ class TikTakToe(tk.Frame):
 		"""
 		
 		x0, y0 = int(event.x/self.size), int(event.y/self.size)
+		print(x0, y0, self.board, self.turn, self.player)
 		if((self.board[x0][y0] == 0) and (self.turn == 1)):
 			self.draw(x0,y0, self.player, 0)
-			self.sock.send(bytes('%d%d'%(x0,y0), encoding='utf-8'))		
+			self.sock.send(bytes('%d%d'%(x0,y0), encoding='utf-8'))
+			print('sent')
 					 
 def run(sock):
 	root = tk.Tk()

@@ -130,7 +130,8 @@ class Server:
 
 						if(play_again == game.PLAY_AGAIN):
 							self.player1.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
-							self.run()
+							self.player1.send(bytes('%d000'%(game.YOU_ARE_P1), encoding='utf-8'))
+							self.player2.send(bytes('%d000'%(game.YOU_ARE_P2), encoding='utf-8'))
 
 					else:
 						self.player2.send(bytes('%d%d00'%(game.EXIT_GAME, player), encoding='utf-8'))	
@@ -142,7 +143,8 @@ class Server:
 
 						if(play_again == game.PLAY_AGAIN):
 							self.player2.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
-							self.run()
+							self.player1.send(bytes('%d000'%(game.YOU_ARE_P1), encoding='utf-8'))
+							self.player2.send(bytes('%d000'%(game.YOU_ARE_P2), encoding='utf-8'))
 					else:
 						self.player1.send(bytes('%d%d00'%(game.EXIT_GAME, player), encoding='utf-8'))
 
@@ -174,7 +176,7 @@ class Server:
 		
 
 def main():
-	port = 65000
+	port = 65001
 	nPlayers = 2
 	dataSize = 2048
 
