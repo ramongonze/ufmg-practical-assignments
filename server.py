@@ -142,9 +142,9 @@ class Server:
 		
 
 def main():
-	port = 65000
+	port = 65002
 	nPlayers = 2
-	dataSize = 64
+	dataSize = 2048
 
 	# Create a new server
 	S = Server(port, nPlayers, dataSize)

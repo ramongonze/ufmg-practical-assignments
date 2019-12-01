@@ -19,7 +19,7 @@ class TikTakToe(tk.Frame):
 		self.turn = turn
 
 	def get_message(self):
-		data = self.sock.recv(64).decode('utf-8')
+		data = self.sock.recv(2048).decode('utf-8')
 		print('message ' + data)
 		player, x, y, turn = int(data.split(',')[0]), int(data.split(',')[1]), int(data.split(',')[2]), int(data.split(',')[3])
 
@@ -99,7 +99,7 @@ class TikTakToe(tk.Frame):
 			x2 = x + fig_size
 			y2 = y + fig_size
 			self.canvas.create_oval(x1, y1, x2, y2, outline="blue",fill="blue", width=2)
-
+		print('draw')
 		self.turn = turn
 		
 
@@ -119,6 +119,7 @@ class TikTakToe(tk.Frame):
 			print(self.player, self.turn)
 			self.draw(x0,y0, self.player, 0)
 			self.sock.send(bytes(str(x0)+","+str(y0), encoding='utf-8'))
+
 		self.get_message()
 		
 					 

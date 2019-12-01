@@ -4,7 +4,7 @@ import socket, select, string, sys
 
 def connect(host, port):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.settimeout(30)
+	sock.settimeout(300)
 	
 	# connect to remote host
 	try :
