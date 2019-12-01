@@ -11,6 +11,8 @@ YOU_ARE_P2      = 4
 P1_WON          = 5
 P2_WON          = 6
 DRAW            = 7
+PLAY_AGAIN      = 8
+EXIT_GAME       = 9  
 
 class TikTakToe(tk.Frame):
 	def __init__(self, sock=None, parent=None, board_size=3, size=256, turn=0):
@@ -24,10 +26,10 @@ class TikTakToe(tk.Frame):
 		self.board_size = board_size
 		self.size = size
 		self.player = 0
-		self.board = np.zeros((board_size,board_size))
 		self.sock = sock
 		self.turn = turn
-
+		self.board = np.zeros((self.board_size,self.board_size))
+		self.play_again = 0
 		# Create a new thread
 		cThread = threading.Thread(target=self.getMessage)
 		cThread.daemon = True # Program becomes able to exit even if many thread are being executed
@@ -53,18 +55,26 @@ class TikTakToe(tk.Frame):
 				self.parent.title("TikTakToe - Player " + str(self.player))
 			elif(message == P1_MUST_PLAY or message == P2_MUST_PLAY):
 				self.draw(x, y, message, turn)
+			elif(message == PLAY_AGAIN):
+				print('play again t')
+				if(self.play_again == 1):
+					print('pg 1')
+					self.restart()
+			elif(message == EXIT_GAME):
+				break		
 			else:
 				if(message == P1_WON and self.player == 1) or (message == P2_WON and self.player == 2):
 					text = "You win! Do you want to play again?"
 				elif((message == P1_WON and self.player == 2) or (message == P2_WON and self.player == 1)):
-					text = "You loose! Do you want to play again?"
+					text = "You lose! Do you want to play again?"
 				elif(message == DRAW):
 					text = "Draw! Want to play again?"
 
 				if(messagebox.askyesno("Match is over!", text)):
-					self.restart()
+					self.sock.send(bytes('%d%d'%(PLAY_AGAIN, self.player), encoding='utf-8'))
 				else:
-					exit()
+					self.sock.send(bytes('%d%d'%(EXIT_GAME, self.player), encoding='utf-8'))
+					break
 
 
 	def initGame(self, parent):
@@ -74,14 +84,15 @@ class TikTakToe(tk.Frame):
 		"""
 
 		self.parent = parent
-
 		width = self.board_size * self.size
 		height = self.board_size * self.size
 		tk.Frame.__init__(self, self.parent)
+
 		self.canvas = tk.Canvas(self, borderwidth=0, highlightthickness=0, width=width, height=height)
 		self.canvas.pack()
 		self.canvas.bind('<Button-1>', self.click)
 		self.parent.title("TikTakToe"+str(self.player))
+		self.board = np.zeros((self.board_size,self.board_size))
 
 		for row in range(self.board_size):
 			for col in range(self.board_size):
@@ -95,10 +106,9 @@ class TikTakToe(tk.Frame):
 		"""
 		generate a new instance of the game.
 		"""
+		print('restart')
 		self.destroy()
-		self.__init__()
-		self.initGame(self.parent)
-		self.pack()	  
+		self.run(self.parent) 
 
 	def draw(self, x0, y0, message, turn):
 		fig_size = self.size/3
@@ -129,7 +139,6 @@ class TikTakToe(tk.Frame):
 		
 		x0, y0 = int(event.x/self.size), int(event.y/self.size)
 		if((self.board[x0][y0] == 0) and (self.turn == 1)):
-
 			self.draw(x0,y0, self.player, 0)
 			self.sock.send(bytes('%d%d'%(x0,y0), encoding='utf-8'))		
 					 

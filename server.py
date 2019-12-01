@@ -11,6 +11,10 @@ class Match():
 	def startMatch(self):
 		self.G = game.TikTakToe()
 
+	def destroy(self):
+		self.currPlayer = None # Keeps the number of the current player who must play.
+		self.G = None # TikTakTow object
+
 
 	def winner(self):
 		"""
@@ -99,8 +103,8 @@ class Server:
 		
 		while True:
 			# Decide which player the server will listen to
-			if self.match.currPlayer == playerID:
-				data = connection.recv(self.dataSize).decode('utf-8')
+			data = connection.recv(self.dataSize).decode('utf-8')
+			if self.match.currPlayer == playerID:	
 				if not data:
 					connection.close()
 					break
@@ -114,6 +118,33 @@ class Server:
 				
 				if result in [1,2,3]:
 					self.match.destroy()
+
+			elif(int(data[0]) == game.PLAY_AGAIN or int(data[0]) == game.EXIT_GAME):
+				play_again, player = int(data[0]), int(data[1])
+				print('play again '+data)
+				if(player == 1):
+					if(play_again == game.PLAY_AGAIN):
+						self.player2.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
+						data = connection.recv(self.dataSize).decode('utf-8')
+						play_again, player = int(data[0]), int(data[1])
+
+						if(play_again == game.PLAY_AGAIN):
+							self.player1.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
+							self.run()
+
+					else:
+						self.player2.send(bytes('%d%d00'%(game.EXIT_GAME, player), encoding='utf-8'))	
+				else:
+					if(play_again == game.PLAY_AGAIN):
+						self.player1.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
+						data = connection.recv(self.dataSize).decode('utf-8')
+						play_again, player = int(data[0]), int(data[1])
+
+						if(play_again == game.PLAY_AGAIN):
+							self.player2.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
+							self.run()
+					else:
+						self.player1.send(bytes('%d%d00'%(game.EXIT_GAME, player), encoding='utf-8'))
 
 	def run(self):
 		while True:
@@ -143,7 +174,7 @@ class Server:
 		
 
 def main():
-	port = 65002
+	port = 65000
 	nPlayers = 2
 	dataSize = 2048
 
