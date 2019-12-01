@@ -6,7 +6,7 @@ import numpy as np
 class Match():
 	def __init__(self):
 		self.currPlayer = None # Keeps the number of the current player who must play.
-		self.G = None 
+		self.G = None # TikTakTow object
 
 	def startMatch(self):
 		self.G = game.TikTakToe()
@@ -20,7 +20,7 @@ class Match():
 			0 -- No win or draw
 			1 -- If player 1 has won
 			2 -- If player 2 has won
-			3 -- If there is a draw
+			3 -- If there was a draw
 		"""
 
 		for player in [1,2]:
@@ -58,11 +58,34 @@ class Server:
 		self.dataSize = dataSize
 		self.player1 = None
 		self.player2 = None
-		self.matchStarted = False
 
 		self.sock.bind((ip, port))
 		self.sock.listen(nClients)
 		self.match = Match()
+
+	def sendMessage(self, data, result, playerID):
+		if result == 0:
+			if self.match.currPlayer == 1:
+				self.match.currPlayer = 2
+				#(1,2,3,4) 1 player 2,3 coord  4 is my turn?
+				self.player1.send(bytes('%d%s%d'%(playerID, data, 0), encoding='utf-8'))
+				self.player2.send(bytes('%d%s%d'%(playerID, data, 1), encoding='utf-8'))
+			else:
+				self.match.currPlayer = 1
+				self.player1.send(bytes('%d%s%d'%(playerID, data, 1), encoding='utf-8'))
+				self.player2.send(bytes('%d%s%d'%(playerID, data, 0), encoding='utf-8'))
+			
+			return None
+		
+		if result == 1:
+			self.player1.send(bytes("%d001"%(game.P1_WON), encoding='utf-8'))
+			self.player2.send(bytes("%d001"%(game.P1_WON), encoding='utf-8'))
+		elif result == 2:
+			self.player1.send(bytes("%d002"%(game.P2_WON), encoding='utf-8'))
+			self.player2.send(bytes("%d002"%(game.P2_WON), encoding='utf-8'))
+		else:
+			self.player1.send(bytes("%d000"%(game.DRAW), encoding='utf-8'))
+			self.player2.send(bytes("%d000"%(game.DRAW), encoding='utf-8'))
 
 	def getMessage(self, connection, address, playerID):
 		"""
@@ -73,46 +96,24 @@ class Server:
 				address: client's address
 				playerID: Player's number
 		"""
-		print(playerID)
-		print('aaaaaaaaaaaaaaaaa')
-		print('self.match.currPlayer'+str(self.match.currPlayer))
+		
 		while True:
-			# Decide which player the server will listen
+			# Decide which player the server will listen to
 			if self.match.currPlayer == playerID:
 				data = connection.recv(self.dataSize).decode('utf-8')
 				if not data:
 					connection.close()
 					break
-				print('player '+str(self.match.currPlayer))
-				x,y = int(data.split(',')[0]), int(data.split(',')[1]) # Get the play
-				self.match.G.board[x, y] = self.match.currPlayer # Fill the board with the play
-				print(x,y)
-				# Check if there is a winner or a draw happened
-				result = self.match.winner()
-				if result == 0:
-					#currBoard = self.match.getStrBoard()
-					if self.match.currPlayer == 1:
-						self.match.currPlayer = 2
-						#(1,2,3,4) 1 player 2,3 coord  4 is my turn?
-						self.player1.send(bytes(str(playerID)+','+data+','+str(0), encoding='utf-8'))
-						self.player2.send(bytes(str(playerID)+','+data+','+str(1), encoding='utf-8'))
-					else:
-						self.match.currPlayer = 1
-						self.player1.send(bytes(str(playerID)+','+data+','+str(1), encoding='utf-8'))
-						self.player2.send(bytes(str(playerID)+','+data+','+str(0), encoding='utf-8'))
-					continue
-				
-				if result == 1:
-					self.player1.send(bytes("7,0,0,1", encoding='utf-8'))
-					self.player2.send(bytes("6,0,0,1", encoding='utf-8'))
-				elif result == 2:
-					self.player1.send(bytes("6,0,0,2", encoding='utf-8'))
-					self.player2.send(bytes("7,0,0,2", encoding='utf-8'))
-				else:
-					self.player1.send(bytes("8,0,0,0", encoding='utf-8'))
-					self.player2.send(bytes("8,0,0,0", encoding='utf-8'))
 
-				self.match.destroy()
+				x,y = int(data[0]), int(data[1]) # Get the play
+				self.match.G.board[x][y] = self.match.currPlayer # Fill the board with the play
+				
+				# Check if there is a winner or a draw
+				result = self.match.winner()
+				self.sendMessage(data, result, playerID)
+				
+				if result in [1,2,3]:
+					self.match.destroy()
 
 	def run(self):
 		while True:
@@ -134,8 +135,8 @@ class Server:
 				# The first player starts playing
 				self.match.currPlayer = 1
 
-				self.player1.send(bytes("4,0,0,0", encoding='utf-8'))
-				self.player2.send(bytes("5,0,0,0", encoding='utf-8'))
+				self.player1.send(bytes('%d000'%(game.YOU_ARE_P1), encoding='utf-8'))
+				self.player2.send(bytes('%d000'%(game.YOU_ARE_P2), encoding='utf-8'))
 				#self.player1.send(bytes(initialBoard + "|" + "It's your turn", encoding='utf-8'))
 				#self.player2.send(bytes(initialBoard + "|" + "It's the adversary's turn", encoding='utf-8'))
 		

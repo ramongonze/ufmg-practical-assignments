@@ -1,6 +1,16 @@
 import tkinter as tk
 import numpy as np
 from tkinter import messagebox
+import threading
+
+# Message variables
+P1_MUST_PLAY    = 1
+P2_MUST_PLAY    = 2
+YOU_ARE_P1      = 3
+YOU_ARE_P2      = 4
+P1_WON          = 5
+P2_WON          = 6
+DRAW            = 7
 
 class TikTakToe(tk.Frame):
 	def __init__(self, sock=None, parent=None, board_size=3, size=256, turn=0):
@@ -18,38 +28,44 @@ class TikTakToe(tk.Frame):
 		self.sock = sock
 		self.turn = turn
 
-	def get_message(self):
-		data = self.sock.recv(2048).decode('utf-8')
-		print('message ' + data)
-		player, x, y, turn = int(data.split(',')[0]), int(data.split(',')[1]), int(data.split(',')[2]), int(data.split(',')[3])
+		# Create a new thread
+		cThread = threading.Thread(target=self.getMessage)
+		cThread.daemon = True # Program becomes able to exit even if many thread are being executed
+		cThread.start()
 
-		if(player==4):
-			self.player = 1
-			self.turn = 1
-			print('# if 4')
-			tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 1 - X")
-			self.parent.title("TikTakToe - Player "+str(self.player))
-		elif(player==5):
-			print('# if 5')
-			self.player = 2
-			tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 2 - O")
-			self.parent.title("TikTakToe - Player "+str(self.player))
-		elif(player==1 or player == 2):
-			print('# if 1 2')
-			self.draw(x,y,player,turn)
+	def getMessage(self):
+		while True:
+			data = self.sock.recv(2048).decode('utf-8')
+			if not data:
+				self.sock.close()
+				break
 
-		elif(player==6 or player == 7):
-			if(messagebox.askyesno("We have a winner!","Player {} won! Want to play again?".format(turn))):
-				print('yes')
-				self.restart()
+			message, x, y, turn = int(data[0]), int(data[1]), int(data[2]), int(data[3])
+
+			if(message == YOU_ARE_P1):
+				self.player = 1
+				self.turn = 1
+				tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 1 - X")
+				self.parent.title("TikTakToe - Player " + str(self.player))
+			elif(message == YOU_ARE_P2):
+				self.player = 2
+				tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 2 - O")
+				self.parent.title("TikTakToe - Player " + str(self.player))
+			elif(message == P1_MUST_PLAY or message == P2_MUST_PLAY):
+				self.draw(x, y, message, turn)
 			else:
-				exit()
-		elif(player==8):
-			if(messagebox.askyesno("Draw!","Draw! Want to play again?")):
-				print('yes')
-				self.restart()
-			else:
-				exit()
+				if(message == P1_WON and self.player == 1) or (message == P2_WON and self.player == 2):
+					text = "You win! Do you want to play again?"
+				elif((message == P1_WON and self.player == 2) or (message == P2_WON and self.player == 1)):
+					text = "You loose! Do you want to play again?"
+				elif(message == DRAW):
+					text = "Draw! Want to play again?"
+
+				if(messagebox.askyesno("Match is over!", text)):
+					self.restart()
+				else:
+					exit()
+
 
 	def initGame(self, parent):
 		"""
@@ -73,9 +89,7 @@ class TikTakToe(tk.Frame):
 				y1 = (row * self.size)
 				x2 = x1 + self.size
 				y2 = y1 + self.size
-				self.canvas.create_rectangle(x1, y1, x2, y2, outline="black", tags='square')
-
-		self.get_message()		
+				self.canvas.create_rectangle(x1, y1, x2, y2, outline="black", tags='square')	
 		
 	def restart(self):
 		"""
@@ -86,23 +100,24 @@ class TikTakToe(tk.Frame):
 		self.initGame(self.parent)
 		self.pack()	  
 
-	def draw(self, x0, y0, player, turn):
+	def draw(self, x0, y0, message, turn):
 		fig_size = self.size/3
 		x, y = (self.size/2) + (self.size * x0), (self.size/2) + (self.size * y0)
 		self.board[x0, y0] = self.player
-		if(player == 1):
+		
+		if(message == P1_MUST_PLAY):
 			self.canvas.create_line(x-fig_size, y-fig_size,x+fig_size, y+fig_size,width=32, fill="red")
 			self.canvas.create_line(x+fig_size, y-fig_size,x-fig_size, y+fig_size,width=32, fill="red")
-		elif(player==2):
+		
+		elif(message == P2_MUST_PLAY):
 			x1 = x - fig_size
 			y1 = y - fig_size
 			x2 = x + fig_size
 			y2 = y + fig_size
 			self.canvas.create_oval(x1, y1, x2, y2, outline="blue",fill="blue", width=2)
-		print('draw')
+		
 		self.turn = turn
 		
-
 	def click(self, event):
 		"""
 		Makes a move for the current player.
@@ -111,22 +126,18 @@ class TikTakToe(tk.Frame):
 		Arguments:
 		event -- a tkinter event
 		"""
-		print('click')
-		print(self.player, self.turn)
+		
 		x0, y0 = int(event.x/self.size), int(event.y/self.size)
 		if((self.board[x0][y0] == 0) and (self.turn == 1)):
-			print('player  turn')
-			print(self.player, self.turn)
-			self.draw(x0,y0, self.player, 0)
-			self.sock.send(bytes(str(x0)+","+str(y0), encoding='utf-8'))
 
-		self.get_message()
-		
+			self.draw(x0,y0, self.player, 0)
+			self.sock.send(bytes('%d%d'%(x0,y0), encoding='utf-8'))		
 					 
 def run(sock):
 	root = tk.Tk()
 	tk.messagebox.showinfo("TikTakToe","Welcome to tiktaktoe! Waiting for the other player...")
 	game = TikTakToe(sock=sock)
+
 	game.initGame(root)
 	game.pack()
 	root.mainloop()
