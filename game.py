@@ -3,26 +3,31 @@ import numpy as np
 from tkinter import messagebox
 
 class TikTakToe(tk.Frame):
-    def __init__(self, parent, board_size=3, size=256):
+    def __init__(self, parent=None, board_size=3, size=256):
         """
         initialize the game class
         
         Arguments:
-        parent -- tkinter parent window that will be used.
         board size -- dimension of the board in number of cells in a row.
         size = size of the each row in pixels.
         """
-        self.parent = parent
         self.board_size = board_size
         self.size = size
         self.player = 1
         self.board = np.zeros((board_size,board_size))
-        
-        width = board_size * size
-        height = board_size * size
 
+    def initGame(self, parent):
+        """
+        Create an interface.
+        parent -- tkinter parent window that will be used.
+        """
+
+        self.parent = parent
+
+        width = self.board_size * self.size
+        height = self.board_size * self.size
         tk.Frame.__init__(self, self.parent)
-        self.canvas = tk.Canvas(self, borderwidth=0, highlightthickness=0,width=width, height=height)
+        self.canvas = tk.Canvas(self, borderwidth=0, highlightthickness=0, width=width, height=height)
         self.canvas.pack()
         self.canvas.bind('<Button-1>', self.click)
         self.parent.title("TikTakToe")
@@ -40,32 +45,39 @@ class TikTakToe(tk.Frame):
         generate a new instance of the game.
         """
         self.destroy()
-        self.__init__(self.parent)
+        self.__init__()
+        self.initGame(self.parent)
         self.pack()      
 
     def winner(self):
         """
-        Check if there is a winner or a draw.
+        Check if there is a draw, winner, or none of them.
 
         Return:
-        1 -- If there is a winner
-        restart/exit window -- if there is a draw
+            0 -- No win or draw
+            1 -- If player 1 has won
+            2 -- If player 2 has won
+            3 -- If there is a draw
         """
-        won =  np.full((self.board_size),self.player)
 
-        if(np.array_equal(np.diag(self.board), won)): return 1
-        if(np.array_equal(np.diag(np.fliplr(self.board)), won)): return 1
+        for player in [1,2]:
+            won = np.full((self.board_size), player)
 
-        for i in range(self.board_size):
-            if(np.array_equal(self.board[i], won)): return 1
-            if(np.array_equal(self.board[:,i], won)): return 1
+            # Check diagonals
+            if(np.array_equal(np.diag(self.board), won)): return player
+            if(np.array_equal(np.diag(np.fliplr(self.board)), won)): return player
 
-        if(not(0 in self.board)):
-            if(messagebox.askyesno("Draw!","Draw! Want to play again?".format(self.player))):
-                self.restart()
-                self.player = 1 + (self.player%2)
-            else:
-                exit()
+            # Check lines and columns
+            for i in range(self.board_size):
+                if(np.array_equal(self.board[i], won)): return player
+                if(np.array_equal(self.board[:,i], won)): return player
+
+        # Draw
+        if(not(0 in self.board)): return 3
+
+        # No win or draw
+        return 0
+
 
     def click(self, event):
         """
@@ -102,7 +114,8 @@ class TikTakToe(tk.Frame):
 
 def run():
     root = tk.Tk()
-    game = TikTakToe(root)
+    game = TikTakToe()
+    game.initGame(root)
     game.pack()
     tk.messagebox.showinfo("TikTakToe","Welcome to tiktaktoe! Player 1 is X and Player 2 is O")
     root.mainloop()
