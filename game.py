@@ -3,125 +3,135 @@ import numpy as np
 from tkinter import messagebox
 
 class TikTakToe(tk.Frame):
-    def __init__(self, parent=None, board_size=3, size=256):
-        """
-        initialize the game class
-        
-        Arguments:
-        board size -- dimension of the board in number of cells in a row.
-        size = size of the each row in pixels.
-        """
-        self.board_size = board_size
-        self.size = size
-        self.player = 1
-        self.board = np.zeros((board_size,board_size))
+	def __init__(self, sock=None, parent=None, board_size=3, size=256, turn=0):
+		"""
+		initialize the game class
+		
+		Arguments:
+		board size -- dimension of the board in number of cells in a row.
+		size = size of the each row in pixels.
+		"""
+		self.board_size = board_size
+		self.size = size
+		self.player = 0
+		self.board = np.zeros((board_size,board_size))
+		self.sock = sock
+		self.turn = turn
 
-    def initGame(self, parent):
-        """
-        Create an interface.
-        parent -- tkinter parent window that will be used.
-        """
+	def get_message(self):
+		data = self.sock.recv(64).decode('utf-8')
+		print('message ' + data)
+		player, x, y, turn = int(data.split(',')[0]), int(data.split(',')[1]), int(data.split(',')[2]), int(data.split(',')[3])
 
-        self.parent = parent
+		if(player==4):
+			self.player = 1
+			self.turn = 1
+			print('# if 4')
+			tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 1 - X")
+			self.parent.title("TikTakToe - Player "+str(self.player))
+		elif(player==5):
+			print('# if 5')
+			self.player = 2
+			tk.messagebox.showinfo("TikTakToe","Connected! You're the Player 2 - O")
+			self.parent.title("TikTakToe - Player "+str(self.player))
+		elif(player==1 or player == 2):
+			print('# if 1 2')
+			self.draw(x,y,player,turn)
 
-        width = self.board_size * self.size
-        height = self.board_size * self.size
-        tk.Frame.__init__(self, self.parent)
-        self.canvas = tk.Canvas(self, borderwidth=0, highlightthickness=0, width=width, height=height)
-        self.canvas.pack()
-        self.canvas.bind('<Button-1>', self.click)
-        self.parent.title("TikTakToe")
+		elif(player==6 or player == 7):
+			if(messagebox.askyesno("We have a winner!","Player {} won! Want to play again?".format(turn))):
+				print('yes')
+				self.restart()
+			else:
+				exit()
+		elif(player==8):
+			if(messagebox.askyesno("Draw!","Draw! Want to play again?")):
+				print('yes')
+				self.restart()
+			else:
+				exit()
 
-        for row in range(self.board_size):
-            for col in range(self.board_size):
-                x1 = (col * self.size)
-                y1 = (row * self.size)
-                x2 = x1 + self.size
-                y2 = y1 + self.size
-                self.canvas.create_rectangle(x1, y1, x2, y2, outline="black", tags='square')
-        
-    def restart(self):
-        """
-        generate a new instance of the game.
-        """
-        self.destroy()
-        self.__init__()
-        self.initGame(self.parent)
-        self.pack()      
+	def initGame(self, parent):
+		"""
+		Create an interface.
+		parent -- tkinter parent window that will be used.
+		"""
 
-    def winner(self):
-        """
-        Check if there is a draw, winner, or none of them.
+		self.parent = parent
 
-        Return:
-            0 -- No win or draw
-            1 -- If player 1 has won
-            2 -- If player 2 has won
-            3 -- If there is a draw
-        """
+		width = self.board_size * self.size
+		height = self.board_size * self.size
+		tk.Frame.__init__(self, self.parent)
+		self.canvas = tk.Canvas(self, borderwidth=0, highlightthickness=0, width=width, height=height)
+		self.canvas.pack()
+		self.canvas.bind('<Button-1>', self.click)
+		self.parent.title("TikTakToe"+str(self.player))
 
-        for player in [1,2]:
-            won = np.full((self.board_size), player)
+		for row in range(self.board_size):
+			for col in range(self.board_size):
+				x1 = (col * self.size)
+				y1 = (row * self.size)
+				x2 = x1 + self.size
+				y2 = y1 + self.size
+				self.canvas.create_rectangle(x1, y1, x2, y2, outline="black", tags='square')
 
-            # Check diagonals
-            if(np.array_equal(np.diag(self.board), won)): return player
-            if(np.array_equal(np.diag(np.fliplr(self.board)), won)): return player
+		self.get_message()		
+		
+	def restart(self):
+		"""
+		generate a new instance of the game.
+		"""
+		self.destroy()
+		self.__init__()
+		self.initGame(self.parent)
+		self.pack()	  
 
-            # Check lines and columns
-            for i in range(self.board_size):
-                if(np.array_equal(self.board[i], won)): return player
-                if(np.array_equal(self.board[:,i], won)): return player
+	def draw(self, x0, y0, player, turn):
+		fig_size = self.size/3
+		x, y = (self.size/2) + (self.size * x0), (self.size/2) + (self.size * y0)
+		self.board[x0, y0] = self.player
+		if(player == 1):
+			self.canvas.create_line(x-fig_size, y-fig_size,x+fig_size, y+fig_size,width=32, fill="red")
+			self.canvas.create_line(x+fig_size, y-fig_size,x-fig_size, y+fig_size,width=32, fill="red")
+		elif(player==2):
+			x1 = x - fig_size
+			y1 = y - fig_size
+			x2 = x + fig_size
+			y2 = y + fig_size
+			self.canvas.create_oval(x1, y1, x2, y2, outline="blue",fill="blue", width=2)
 
-        # Draw
-        if(not(0 in self.board)): return 3
+		self.turn = turn
+		
 
-        # No win or draw
-        return 0
+	def click(self, event):
+		"""
+		Makes a move for the current player.
+		If the clicked square is empty, makes a move.
 
-
-    def click(self, event):
-        """
-        Makes a move for the current player.
-        If the clicked square is empty, makes a move.
-
-        Arguments:
-        event -- a tkinter event
-        """
-        x0, y0 = int(event.x/self.size), int(event.y/self.size)
-
-        if(self.board[x0][y0] == 0):
-            x, y = (self.size/2) + (self.size * x0), (self.size/2) + (self.size * y0)
-            fig_size = self.size/3
-            self.board[x0, y0] = self.player
-
-            if(self.player == 1):
-                self.canvas.create_line(x-fig_size, y-fig_size,x+fig_size, y+fig_size,width=32, fill="red")
-                self.canvas.create_line(x+fig_size, y-fig_size,x-fig_size, y+fig_size,width=32, fill="red")
-            else:
-                x1 = x - fig_size
-                y1 = y - fig_size
-                x2 = x + fig_size
-                y2 = y + fig_size
-                self.canvas.create_oval(x1, y1, x2, y2, outline="blue",fill="blue", width=2)
-
-            if(self.winner()):
-                if(messagebox.askyesno("We have a winner!","Player {} won! Want to play again?".format(self.player))):
-                    self.restart()
-                else:
-                    exit()
-            else:
-                self.player = 1 + (self.player%2)    
-
-def run():
-    root = tk.Tk()
-    game = TikTakToe()
-    game.initGame(root)
-    game.pack()
-    tk.messagebox.showinfo("TikTakToe","Welcome to tiktaktoe! Player 1 is X and Player 2 is O")
-    root.mainloop()
+		Arguments:
+		event -- a tkinter event
+		"""
+		print('click')
+		print(self.player, self.turn)
+		x0, y0 = int(event.x/self.size), int(event.y/self.size)
+		if((self.board[x0][y0] == 0) and (self.turn == 1)):
+			print('player  turn')
+			print(self.player, self.turn)
+			self.draw(x0,y0, self.player, 0)
+			self.sock.send(bytes(str(x0)+","+str(y0), encoding='utf-8'))
+		self.get_message()
+		
+					 
+def run(sock):
+	root = tk.Tk()
+	tk.messagebox.showinfo("TikTakToe","Welcome to tiktaktoe! Waiting for the other player...")
+	game = TikTakToe(sock=sock)
+	game.initGame(root)
+	game.pack()
+	root.mainloop()
 
 def main():
-    run()
+	run()
 
 if __name__ == "__main__":
-    main()
+	main()

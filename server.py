@@ -1,6 +1,7 @@
 import socket
 import threading
 import game
+import numpy as np
 
 class Match():
 	def __init__(self):
@@ -10,24 +11,35 @@ class Match():
 	def startMatch(self):
 		self.G = game.TikTakToe()
 
-	def getStrBoard(self):
-		"""
-			Returns the board in a string. Example:
-			Original table:
-				|a|b|c|
-				|d|e|f|
-				|g|h|i|
-			
-			Return: "a,b,c,d,e,f,g,h"
-		"""
-		board = ''
-		for i in range(3):
-			for j in range(3):
-				board = board + str(self.G.board[i][j]) + ','
-		del board[-1]
 
-		return board
+	def winner(self):
+		"""
+		Check if there is a draw, winner, or none of them.
 
+		Return:
+			0 -- No win or draw
+			1 -- If player 1 has won
+			2 -- If player 2 has won
+			3 -- If there is a draw
+		"""
+
+		for player in [1,2]:
+			won = np.full((self.G.board_size), player)
+
+			# Check diagonals
+			if(np.array_equal(np.diag(self.G.board), won)): return player
+			if(np.array_equal(np.diag(np.fliplr(self.G.board)), won)): return player
+
+			# Check lines and columns
+			for i in range(self.G.board_size):
+				if(np.array_equal(self.G.board[i], won)): return player
+				if(np.array_equal(self.G.board[:,i], won)): return player
+
+		# Draw
+		if(not(0 in self.G.board)): return 3
+
+		# No win or draw
+		return 0	
 
 class Server:
 	def __init__(self, port, nClients, dataSize, ip='0.0.0.0'):
@@ -61,42 +73,44 @@ class Server:
 				address: client's address
 				playerID: Player's number
 		"""
-
+		print(playerID)
+		print('aaaaaaaaaaaaaaaaa')
+		print('self.match.currPlayer'+str(self.match.currPlayer))
 		while True:
 			# Decide which player the server will listen
 			if self.match.currPlayer == playerID:
-				data = connection.recv(self.dataSize)
-
+				data = connection.recv(self.dataSize).decode('utf-8')
 				if not data:
 					connection.close()
 					break
-
+				print('player '+str(self.match.currPlayer))
 				x,y = int(data.split(',')[0]), int(data.split(',')[1]) # Get the play
 				self.match.G.board[x, y] = self.match.currPlayer # Fill the board with the play
-
+				print(x,y)
 				# Check if there is a winner or a draw happened
 				result = self.match.winner()
 				if result == 0:
-					currBoard = self.getStrBoard()
+					#currBoard = self.match.getStrBoard()
 					if self.match.currPlayer == 1:
 						self.match.currPlayer = 2
-						self.player1.send(bytes(currBoard + "|" + "It's the adversary's turn"))
-						self.player2.send(bytes(currBoard + "|" + "It's your turn"))
+						#(1,2,3,4) 1 player 2,3 coord  4 is my turn?
+						self.player1.send(bytes(str(playerID)+','+data+','+str(0), encoding='utf-8'))
+						self.player2.send(bytes(str(playerID)+','+data+','+str(1), encoding='utf-8'))
 					else:
 						self.match.currPlayer = 1
-						self.player1.send(bytes(currBoard + "|" + "It's your turn"))
-						self.player2.send(bytes(currBoard + "|" + "It's the adversary's turn"))
+						self.player1.send(bytes(str(playerID)+','+data+','+str(1), encoding='utf-8'))
+						self.player2.send(bytes(str(playerID)+','+data+','+str(0), encoding='utf-8'))
 					continue
 				
 				if result == 1:
-					self.player1.send(bytes('|You win!'))
-					self.player2.send(bytes('|You loose!'))
+					self.player1.send(bytes("7,0,0,1", encoding='utf-8'))
+					self.player2.send(bytes("6,0,0,1", encoding='utf-8'))
 				elif result == 2:
-					self.player1.send(bytes('|You loose!'))
-					self.player2.send(bytes('|You win!'))
+					self.player1.send(bytes("6,0,0,2", encoding='utf-8'))
+					self.player2.send(bytes("7,0,0,2", encoding='utf-8'))
 				else:
-					self.player1.send(bytes('|Draw!'))
-					self.player2.send(bytes('|Draw!'))
+					self.player1.send(bytes("8,0,0,0", encoding='utf-8'))
+					self.player2.send(bytes("8,0,0,0", encoding='utf-8'))
 
 				self.match.destroy()
 
@@ -119,16 +133,18 @@ class Server:
 
 				# The first player starts playing
 				self.match.currPlayer = 1
-				initialBoard = getStrBoard()
-				self.player1.send(bytes(initialBoard + "|" + "It's your turn"))
-				self.player2.send(bytes(initialBoard + "|" + "It's the adversary's turn"))
+
+				self.player1.send(bytes("4,0,0,0", encoding='utf-8'))
+				self.player2.send(bytes("5,0,0,0", encoding='utf-8'))
+				#self.player1.send(bytes(initialBoard + "|" + "It's your turn", encoding='utf-8'))
+				#self.player2.send(bytes(initialBoard + "|" + "It's the adversary's turn", encoding='utf-8'))
 		
 		
 
 def main():
 	port = 65000
 	nPlayers = 2
-	dataSize = 1024
+	dataSize = 64
 
 	# Create a new server
 	S = Server(port, nPlayers, dataSize)

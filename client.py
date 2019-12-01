@@ -4,7 +4,7 @@ import socket, select, string, sys
 
 def connect(host, port):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.settimeout(2)
+	sock.settimeout(30)
 	
 	# connect to remote host
 	try :
@@ -25,8 +25,8 @@ def main():
 	port = int(sys.argv[2])
 
 	sock = connect(host, port)
-	game.run()
+	game.run(sock=sock)
 
 
 if __name__ == "__main__":
-	def main()
+	main()
