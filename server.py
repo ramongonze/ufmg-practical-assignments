@@ -3,18 +3,18 @@ import threading
 import game
 import numpy as np
 
+def createThread(func, arguments):
+	cThread = threading.Thread(target=func, args=arguments)
+	cThread.daemon = True # Program becomes able to exit even if many thread are being executed
+	cThread.start()
+
 class Match():
 	def __init__(self):
 		self.currPlayer = None # Keeps the number of the current player who must play.
-		self.G = None # TikTakTow object
+		self.G = None # TicTacToe object
 
 	def startMatch(self):
-		self.G = game.TikTakToe()
-
-	def destroy(self):
-		self.currPlayer = None # Keeps the number of the current player who must play.
-		self.G = None # TikTakTow object
-
+		self.G = game.TicTacToe()
 
 	def winner(self):
 		"""
@@ -62,18 +62,46 @@ class Server:
 		self.dataSize = dataSize
 		self.player1 = None
 		self.player2 = None
+		self.resetMatch = 0 # It keeps the number of players who answered 'game.PLAY_AGAIN'
+		self.matchNumber = 1 # Used to swap which player starts playing
 
 		self.sock.bind((ip, port))
 		self.sock.listen(nClients)
 		self.match = Match()
 
-	def sendMessage(self, data, result, playerID):
+	def manageMatch(self):
+		while True:
+			if self.resetMatch == 2:
+				del self.match
+				self.match = Match() # New match
+
+				# Start a new match
+				self.match.startMatch()
+
+				# Decides which player is going to play at first
+				if self.matchNumber%2 == 1:
+					self.match.currPlayer = 2
+					self.player2.send(bytes('%d00'%(game.YOU_ARE_P1), encoding='utf-8'))
+					self.player1.send(bytes('%d00'%(game.YOU_ARE_P2), encoding='utf-8'))
+				else:
+					self.match.currPlayer = 1
+					self.player1.send(bytes('%d00'%(game.YOU_ARE_P1), encoding='utf-8'))
+					self.player2.send(bytes('%d00'%(game.YOU_ARE_P2), encoding='utf-8'))
+				
+				self.matchNumber += 1
+				self.resetMatch = 0
+
+				aux = self.player1
+				self.player1 = self.player2
+				self.player2 = self.player1
+
+	def sendResult(self, data, result, playerID):
 		if result == 0:
 			if self.match.currPlayer == 1:
 				self.match.currPlayer = 2
-				#(1,2,3,4) 1 player 2,3 coord  4 is my turn?
-				self.player1.send(bytes('%d%s%d'%(playerID, data, 0), encoding='utf-8'))
-				self.player2.send(bytes('%d%s%d'%(playerID, data, 1), encoding='utf-8'))
+				#(1,2,3) 1 message, 2,3 coord
+				self.player1.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
+				self.player2.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
 			else:
 				self.match.currPlayer = 1
 				self.player1.send(bytes('%d%s%d'%(playerID, data, 1), encoding='utf-8'))
@@ -82,29 +110,52 @@ class Server:
 			return None
 		
 		if result == 1:
-			self.player1.send(bytes("%d001"%(game.P1_WON), encoding='utf-8'))
-			self.player2.send(bytes("%d001"%(game.P1_WON), encoding='utf-8'))
+			self.player1.send(bytes("%d00"%(game.P1_WON), encoding='utf-8'))
+			self.player2.send(bytes("%d00"%(game.P1_WON), encoding='utf-8'))
 		elif result == 2:
-			self.player1.send(bytes("%d002"%(game.P2_WON), encoding='utf-8'))
-			self.player2.send(bytes("%d002"%(game.P2_WON), encoding='utf-8'))
+			self.player1.send(bytes("%d00"%(game.P2_WON), encoding='utf-8'))
+			self.player2.send(bytes("%d00"%(game.P2_WON), encoding='utf-8'))
 		else:
-			self.player1.send(bytes("%d000"%(game.DRAW), encoding='utf-8'))
-			self.player2.send(bytes("%d000"%(game.DRAW), encoding='utf-8'))
+			self.player1.send(bytes("%d00"%(game.DRAW), encoding='utf-8'))
+			self.player2.send(bytes("%d00"%(game.DRAW), encoding='utf-8'))
 
-	def getMessage(self, connection, address, playerID):
+	def manageClient(self, connection, playerID):
 		"""
 			A handler used by a new thread created due to a new connection between server and client.
 
 			@Parameters:
 				connection: client's connection object
-				address: client's address
 				playerID: Player's number
 		"""
 		
 		while True:
+			if playerID == 1:
+				connection = self.player1
+			else:
+				connection = self.player2
+
 			# Decide which player the server will listen to
 			data = connection.recv(self.dataSize).decode('utf-8')
-			if self.match.currPlayer == playerID:	
+			
+			print('Server received from Player[%d]: |'%(playerID) + str(data) + '|')
+			
+			if len(data) > 1 and int(data[0]) == game.PLAY_AGAIN:
+				self.resetMatch += 1 # Increase the number of players who accepted playing again
+
+				if(playerID == 1):
+					self.player2.send(bytes('%d00'%(game.PLAY_AGAIN), encoding='utf-8'))
+				else:
+					self.player1.send(bytes('%d00'%(game.PLAY_AGAIN), encoding='utf-8'))
+			
+			elif len(data) > 1 and int(data[0]) == game.EXIT_GAME:
+				if(playerID == 1):
+					self.player2.send(bytes('%d00'%(game.EXIT_GAME), encoding='utf-8'))
+				else:
+					self.player1.send(bytes('%d00'%(game.EXIT_GAME), encoding='utf-8'))
+
+				connection.close()
+
+			elif self.match.currPlayer == playerID:
 				if not data:
 					connection.close()
 					break
@@ -114,66 +165,39 @@ class Server:
 				
 				# Check if there is a winner or a draw
 				result = self.match.winner()
-				self.sendMessage(data, result, playerID)
-				
-				if result in [1,2,3]:
-					self.match.destroy()
-
-			elif(int(data[0]) == game.PLAY_AGAIN or int(data[0]) == game.EXIT_GAME):
-				play_again, player = int(data[0]), int(data[1])
-				print('play again '+data)
-				if(player == 1):
-					if(play_again == game.PLAY_AGAIN):
-						self.player2.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
-						data = connection.recv(self.dataSize).decode('utf-8')
-						play_again, player = int(data[0]), int(data[1])
-
-						if(play_again == game.PLAY_AGAIN):
-							self.player1.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
-							self.player1.send(bytes('%d000'%(game.YOU_ARE_P1), encoding='utf-8'))
-							self.player2.send(bytes('%d000'%(game.YOU_ARE_P2), encoding='utf-8'))
-
-					else:
-						self.player2.send(bytes('%d%d00'%(game.EXIT_GAME, player), encoding='utf-8'))	
-				else:
-					if(play_again == game.PLAY_AGAIN):
-						self.player1.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
-						data = connection.recv(self.dataSize).decode('utf-8')
-						play_again, player = int(data[0]), int(data[1])
-
-						if(play_again == game.PLAY_AGAIN):
-							self.player2.send(bytes('%d%d00'%(play_again, player), encoding='utf-8'))
-							self.player1.send(bytes('%d000'%(game.YOU_ARE_P1), encoding='utf-8'))
-							self.player2.send(bytes('%d000'%(game.YOU_ARE_P2), encoding='utf-8'))
-					else:
-						self.player1.send(bytes('%d%d00'%(game.EXIT_GAME, player), encoding='utf-8'))
+				self.sendResult(data, result, playerID)
 
 	def run(self):
 		while True:
-			connection, address = self.sock.accept()
+			connection, _ = self.sock.accept()
 
 			# After making a new connection, we create a new thread
-			cThread = threading.Thread(target=self.getMessage, args=(connection, address, 1 if self.player1 == None else 2))
-			cThread.daemon = True # Program becomes able to exit even if many thread are being executed
-			cThread.start()
+			
 			
 			# Add the new player's connection to the list of players
 			if self.player1 == None:
 				self.player1 = connection
+				createThread(self.manageClient, (connection, 1))
+				print('Player 1 connected.')
 			else:
+				print('Player 2 connected.')
 				self.player2 = connection
+				createThread(self.manageClient, (connection, 2))
+
 				# Start a new match
 				self.match.startMatch()
+				print('Match started!')
 
 				# The first player starts playing
 				self.match.currPlayer = 1
+				self.resetMatch = 0
+				
+				cThread = threading.Thread(target=self.manageMatch)
+				cThread.daemon = True # Program becomes able to exit even if many thread are being executed
+				cThread.start()
 
-				self.player1.send(bytes('%d000'%(game.YOU_ARE_P1), encoding='utf-8'))
-				self.player2.send(bytes('%d000'%(game.YOU_ARE_P2), encoding='utf-8'))
-				#self.player1.send(bytes(initialBoard + "|" + "It's your turn", encoding='utf-8'))
-				#self.player2.send(bytes(initialBoard + "|" + "It's the adversary's turn", encoding='utf-8'))
-		
-		
+				self.player1.send(bytes('%d00'%(game.YOU_ARE_P1), encoding='utf-8'))
+				self.player2.send(bytes('%d00'%(game.YOU_ARE_P2), encoding='utf-8'))		
 
 def main():
 	port = 65001
