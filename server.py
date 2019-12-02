@@ -196,4 +196,6 @@ def main():
 	S = Server(port, nPlayers, dataSize)
 	S.run()
 
-main()
+if __name__=="__main__":
+    main()
+

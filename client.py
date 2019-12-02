@@ -64,4 +64,6 @@ def main():
 
 	# game.run(sock=sock)
 
-main()
+if __name__=="__main__":
+    main()
+

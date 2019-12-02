@@ -6,15 +6,15 @@ from time import sleep
 
 # Message variables
 IT_IS_YOUR_TURN = 0
-P1_MUST_PLAY    = 1
-P2_MUST_PLAY    = 2
-YOU_ARE_P1      = 3
-YOU_ARE_P2      = 4
-P1_WON          = 5
-P2_WON          = 6
-DRAW            = 7
-PLAY_AGAIN      = 8
-EXIT_GAME       = 9 
+P1_MUST_PLAY = 1
+P2_MUST_PLAY = 2
+YOU_ARE_P1 = 3
+YOU_ARE_P2 = 4
+P1_WON = 5
+P2_WON = 6
+DRAW = 7
+PLAY_AGAIN = 8
+EXIT_GAME = 9
 
 class TicTacToeServer():
 	"""docstring for TicTacToeServer"""
