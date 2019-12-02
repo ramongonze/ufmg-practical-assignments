@@ -182,7 +182,6 @@ class TicTacToeClient(tk.Frame):
 		elif(message == EXIT_GAME):
 			# Closes the window and connection
 			tk.messagebox.showinfo("TicTacToe","Your adversary don't want to play more =(")
-			sleep(3)
 			self.parent.destroy()
 			exit()
 
