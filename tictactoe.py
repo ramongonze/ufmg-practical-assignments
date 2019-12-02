@@ -5,6 +5,7 @@ import threading
 from time import sleep
 
 # Message variables
+IT_IS_YOUR_TURN = 0
 P1_MUST_PLAY    = 1
 P2_MUST_PLAY    = 2
 YOU_ARE_P1      = 3
@@ -76,6 +77,7 @@ class TicTacToeClient(tk.Frame):
 		self.board = None
 		self.player = None # Player number (can assume 1 or 2)
 		self.parent = None # Tkinter parent window that will be used.
+		self.isMyTurn = False # Used to control user actions
 
 	def resetBoard(self):
 		"""
@@ -110,10 +112,11 @@ class TicTacToeClient(tk.Frame):
 		# Get play (mouse click)
 		x, y = int(event.x/self.squareSize), int(event.y/self.squareSize)
 		# If the square clicked is empty, does a movement
-		if(self.board[x][y] == 0):
+		if(self.board[x][y] == 0 and self.isMyTurn):
 			self.board[x][y] = self.player
 			self.draw(x,y, self.player)
 			self.sock.send(bytes('%d%d'%(x,y), encoding='utf-8'))
+			self.isMyTurn = False
 
 	def initGame(self, parent):
 		"""
@@ -153,8 +156,11 @@ class TicTacToeClient(tk.Frame):
 				y: y coordinate
 		"""
 
-		if(message == YOU_ARE_P1):
+		if(message == IT_IS_YOUR_TURN):
+			self.isMyTurn = True
+		elif(message == YOU_ARE_P1):
 			self.player = 1
+			self.isMyTurn = True # In the first match Player 1 starts playing
 			tk.messagebox.showinfo("TicTacToe", "You're the Player 1 - X")
 			self.parent.title("TicTacToe - Player %d"%(self.player))
 
@@ -164,7 +170,11 @@ class TicTacToeClient(tk.Frame):
 			self.parent.title("TicTacToe - Player %d"%(self.player))
 
 		elif(message == P1_MUST_PLAY or message == P2_MUST_PLAY):
-			self.draw(x, y, message)
+			if self.player == message:
+				self.isMyTurn = True
+
+			self.board[x][y] = message
+			self.draw(x, y, 1 + (message%2))
 
 		elif(message == PLAY_AGAIN):
 			self.adversary_play_again = 1
@@ -193,6 +203,7 @@ class TicTacToeClient(tk.Frame):
 
 			if(messagebox.askyesno("Match is over!", text)):
 				self.i_play_again = 1
+				self.restart()
 				self.sock.send(bytes('%d0'%(PLAY_AGAIN), encoding='utf-8'))
 				tk.messagebox.showinfo("Restart match", "Waiting for the adversary...")
 			else:
@@ -201,3 +212,19 @@ class TicTacToeClient(tk.Frame):
 				# Closes the window and connection
 				self.parent.destroy()
 				exit()
+
+	def restart(self):
+		"""
+			Generate a new instance of the game.
+		"""
+		self.destroy()
+		
+		self.resetBoard()
+		self.i_play_again = 0
+		self.adversary_play_again = 0
+		self.isMyTurn = False
+
+		self.initGame(self.parent)
+
+		# Update the screen
+		self.pack()

@@ -34,12 +34,13 @@ def getMessage(game, sock):
 		"""
 
 		while True:
-			data = sock.recv(2048).decode('utf-8')
+			data = sock.recv(3).decode('utf-8')
 			if not data:
 				sock.close()
 				break
-				
+
 			message, x, y = int(data[0]), int(data[1]), int(data[2])
+			print('Received: |' + str(data) + '|')
 			game.processMessage(message, x, y)
 
 def main():

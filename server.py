@@ -11,7 +11,7 @@ def createThread(func, arguments=None):
 class Match():
 	def __init__(self):
 		self.currPlayer = None # Keeps the number of the current player who must play.
-		self.game = None # TicTacToe object
+		self.game = ttt.TicTacToeServer() # TicTacToe object
 
 	def startMatch(self, player1, player2):
 		"""
@@ -25,7 +25,6 @@ class Match():
 				player2: socket connection
 		"""
 
-		self.game = ttt.TicTacToeServer()
 		self.game.resetBoard()
 		
 		if self.currPlayer == 1:
@@ -54,6 +53,7 @@ class Server:
 		self.player2 = None
 		self.resetMatch = 0 # It keeps the number of players who answered 'ttt.PLAY_AGAIN'
 		self.matchNumber = 1 # Used to swap which player starts playing
+		self.lock = True # Used when restarting match
 
 		self.sock.bind((ip, port))
 		self.sock.listen(nClients)
@@ -61,42 +61,53 @@ class Server:
 
 	def manageMatch(self):
 		while True:
-			if self.resetMatch == 2:
-				
+			if self.resetMatch == 2 and self.lock == False:
+
 				# Decides which player is going to play at first
-				self.match.currPlayer = 1 + (self.matchNumber%2)
-				
+				if self.matchNumber%2 == 1:
+					self.match.currPlayer = 2
+					self.player2.send(bytes('%d00'%(ttt.IT_IS_YOUR_TURN), encoding='utf-8'))
+				else:
+					self.match.currPlayer = 1	
+					self.player1.send(bytes('%d00'%(ttt.IT_IS_YOUR_TURN), encoding='utf-8'))
+
 				# Start a new match
-				self.resetBoard()
+				self.match.game.resetBoard()
 				
 				self.matchNumber += 1
 				self.resetMatch = 0
 
-				aux = self.player1
-				self.player1 = self.player2
-				self.player2 = self.player1
+				print('\n[New match started]')
 
 	def sendResult(self, data, result, playerID):
 		if result == 0:
 			if self.match.currPlayer == 1:
 				self.match.currPlayer = 2
 				#(1,2,3) 1 message, 2,3 coord
-				self.player1.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
-				self.player2.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
+				self.player2.send(bytes('%d%s'%(ttt.P2_MUST_PLAY, data), encoding='utf-8'))
+				# self.player1.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
 			else:
 				self.match.currPlayer = 1
-				self.player1.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
-				self.player2.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
+				self.player1.send(bytes('%d%s'%(ttt.P1_MUST_PLAY, data), encoding='utf-8'))
+				# self.player2.send(bytes('%d%s'%(playerID, data), encoding='utf-8'))
 			
 			return None
 		
+		"""
+			Sending '44' represents that player do not need to fill more squares.
+			On the other hand, if data is passed, instead of '44', there is more 
+			one square to be filled by that player.
+		"""
 		if result == 1:
 			self.player1.send(bytes("%d44"%(ttt.P1_WON), encoding='utf-8'))
 			self.player2.send(bytes("%d%s"%(ttt.P1_WON, data), encoding='utf-8'))
+			print('[Player 1 win]')
 		elif result == 2:
 			self.player1.send(bytes("%d%s"%(ttt.P2_WON, data), encoding='utf-8'))
 			self.player2.send(bytes("%d44"%(ttt.P2_WON), encoding='utf-8'))
+			print('[Player 2 win]')
 		else:
+			print('Draw!')
 			if playerID == 1:
 				self.player1.send(bytes("%d44"%(ttt.DRAW), encoding='utf-8'))
 				self.player2.send(bytes("%d%s"%(ttt.DRAW, data), encoding='utf-8'))
@@ -114,31 +125,29 @@ class Server:
 		"""
 		
 		while True:
-			# if playerID == 1:
-			# 	connection = self.player1
-			# else:
-			# 	connection = self.player2
-
-			# Decide which player the server will listen to
 			data = connection.recv(self.dataSize).decode('utf-8')
 			
-			# if len(data) > 1 and int(data[0]) == ttt.PLAY_AGAIN:
-			# 	self.resetMatch += 1 # Increase the number of players who accepted playing again
+			print('Received from Player[%d]: |'%(playerID) + str(data) + '|')
+			if len(data) > 1 and int(data[0]) == ttt.PLAY_AGAIN:
+				self.lock = True
+				self.resetMatch += 1 # Increase the number of players who accepted playing again
 
-			# 	if(playerID == 1):
-			# 		self.player2.send(bytes('%d00'%(ttt.PLAY_AGAIN), encoding='utf-8'))
-			# 	else:
-			# 		self.player1.send(bytes('%d00'%(ttt.PLAY_AGAIN), encoding='utf-8'))
+				if(playerID == 1):
+					self.player2.send(bytes('%d00'%(ttt.PLAY_AGAIN), encoding='utf-8'))
+				else:
+					self.player1.send(bytes('%d00'%(ttt.PLAY_AGAIN), encoding='utf-8'))
+				
+				self.lock = False
+
+			elif len(data) > 1 and int(data[0]) == ttt.EXIT_GAME:
+				if(playerID == 1):
+					self.player2.send(bytes('%d00'%(ttt.EXIT_GAME), encoding='utf-8'))
+				else:
+					self.player1.send(bytes('%d00'%(ttt.EXIT_GAME), encoding='utf-8'))
+				connection.close()
 			
-			# elif len(data) > 1 and int(data[0]) == ttt.EXIT_GAME:
-			# 	if(playerID == 1):
-			# 		self.player2.send(bytes('%d00'%(ttt.EXIT_GAME), encoding='utf-8'))
-			# 	else:
-			# 		self.player1.send(bytes('%d00'%(ttt.EXIT_GAME), encoding='utf-8'))
-
-			# 	connection.close()
-
-			if self.match.currPlayer == playerID:
+			elif self.match.currPlayer == playerID:
+				# Decides which player the server will listen to
 				if not data:
 					connection.close()
 					break
@@ -156,12 +165,12 @@ class Server:
 
 			# Add the new player's connection to the list of players
 			if self.player1 == None:
-				print('Player 1 connected.')
+				print('[Player 1 connected]')
 				
 				self.player1 = connection
 				createThread(self.manageClient, (connection, 1))
 			else:
-				print('Player 2 connected.')
+				print('[Player 2 connected]')
 				
 				self.player2 = connection
 				createThread(self.manageClient, (connection, 2))
@@ -172,7 +181,7 @@ class Server:
 				
 				# Start a new match
 				self.match.startMatch(self.player1, self.player2)
-				print('Match has started!')
+				print('[Match started]')
 				
 				cThread = threading.Thread(target=self.manageMatch)
 				cThread.daemon = True # Program becomes able to exit even if many thread are being executed
@@ -181,7 +190,7 @@ class Server:
 def main():
 	port = 65001
 	nPlayers = 2
-	dataSize = 2048
+	dataSize = 2 # Receives only coordinates from clients
 
 	# Create a new server
 	S = Server(port, nPlayers, dataSize)
