@@ -7,4 +7,6 @@ It can be classified as an application in the Application Layer (OSI model), and
 
 Group members: Guilherme Resende, Gustavo Germano, Ramon Gonze
 
-The documentation is available in portuguese in the file *Documentacao.pdf*.
+The documentation is available in portuguese in the file *Documentacao.pdf*. 
+
+There is also a demonstration video (in portuguese) on YouTube: https://youtu.be/bjSy4wVoLBI
