@@ -1,0 +1,30 @@
+main creating t0
+main yielding t0
+t0 yielding
+main waiting t0
+t0 exiting
+main continuing
+main creating t1
+main yielding t1
+t1 yielding
+main waiting t1
+t1 exiting
+main continuing
+main creating t2
+main yielding t2
+t2 yielding
+main waiting t2
+t2 exiting
+main continuing
+main creating t3
+main yielding t3
+t3 yielding
+main waiting t3
+t3 exiting
+main continuing
+main creating t4
+main yielding t4
+t4 yielding
+main waiting t4
+t4 exiting
+main continuing
