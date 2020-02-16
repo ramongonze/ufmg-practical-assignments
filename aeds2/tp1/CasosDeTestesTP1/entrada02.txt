@@ -1,0 +1,28 @@
+5
+100;AnaMaria;200;500
+200;HannahM;100
+300;Guedes;400
+400;Anderson;300;500
+500;Simone;100;400
+1;1;500;6000;Freixo se saindo muito bem no debate! Lembrando que pesquisas não decidem eleições! 
+2;1;200;7001;Gente, quero ver um filme com meu namorado. Vocês poderiam me indicar um namorado?
+3;1;500;6001;O PT não saiu derrotado nessas eleições, o NINGUÉM venceu nas urnas.
+4;2;300;500
+5;1;300;5000;Neymar chegou a marca de 300 gols na carreira. Apenas 24 anos!
+6;4;100;6000
+7;1;500;6002;Eu lembro. Repito p que vc ai se LEMBRE SEMPRE TAMBÉM,sabe como é…logo teremos eleições
+8;5;100
+9;1;400;8003;Acho que vou colocar nome em um Pokémon bem forte e grande "papel de trouxa" e dizer! Papel de trouxa eu escolho você! #PokemonGO
+10;4;300;8003
+11;1;200;7002;Aquele momento q vc começa a ver um filme e fica mexendo no celular e esquece de assistir o filme e a tv fica ligada sem ngm assistindo
+12;1;500;6003;Depois das eleições, prefeito manda recolher material de campanha.
+13;3;400;500;
+14;5;400
+15;1;300;5001;Uma descontraída antes de começar a final! Nossos craques levam jeito no futebol?
+16;5;500
+17;4;200;7001
+18;5;200
+19;1;400;8002;Logo vou pegar #Bidoof no meu team e vou esfregar na cara da sociedade quando acabar com Cynthia. Anote isso #Pokemon #PokemonDiamondPearl
+20;1;400;8001;Tem 20 anos que a crítica diz que, apesar de o livro,roteiro,remake serem ideais para as excentricidades, Tim Burton não fez um filme bom.
+21;5;300
+22;5;400
