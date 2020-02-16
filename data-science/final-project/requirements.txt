@@ -1,0 +1,10 @@
+sklearn
+tensorflow
+nltk
+keras
+matplotlib
+seaborn
+geopy
+random
+pandas
+datetime
